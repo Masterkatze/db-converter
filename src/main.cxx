@@ -1,7 +1,7 @@
-#include "tools_base.hxx"
 #include "db_tools.hxx"
 #include "xray_re/xr_file_system.hxx"
 #include "xray_re/xr_log.hxx"
+#include <boost/program_options.hpp>
 
 using namespace xray_re;
 
@@ -34,6 +34,28 @@ void usage()
 	printf(" --xdb_ud <FILE> attach user data from <FILE>\n");
 }
 
+bool conflicting_options_exist(const boost::program_options::variables_map& vm, std::vector<std::string> options)
+{
+	std::string found_option = "";
+	for(const auto& option : options)
+	{
+		if(vm.count(option))
+		{
+			if(found_option.empty())
+			{
+				found_option = option;
+			}
+			else
+			{
+				msg("Conflicting options \"%s\" and \"%s\" specified", found_option.c_str(), option.c_str());
+				return true;
+			}
+		}
+	}
+
+	return false;
+}
+
 int main(int argc, char* argv[])
 {
 	try
@@ -50,7 +72,7 @@ int main(int argc, char* argv[])
 		    ("2947ru", "")
 		    ("2947ww", "")
 		    ("xdb", "")
-		    ("xdb_ud", "")
+		    ("xdb_ud", boost::program_options::value<std::string>(), "")
 		    ("out", boost::program_options::value<std::string>(), "")
 		    ("dir", boost::program_options::value<std::string>(), "")
 		    ("flt", boost::program_options::value<std::string>(), "");
@@ -65,19 +87,23 @@ int main(int argc, char* argv[])
 			return 1;
 		}
 
-		unsigned format = tools_base::TOOLS_AUTO;
-
-		if (vm.count("unpack"))
-			format |= tools_base::TOOLS_DB;
-
-		if (vm.count("pack"))
-			format |= tools_base::TOOLS_FOLDER;
-
-		if ((format & (format - 1)) != 0)
+		if(conflicting_options_exist(vm, {"pack", "unpack"}))
 		{
-			msg("Conflicting source formats");
 			return 1;
 		}
+
+		if(conflicting_options_exist(vm, {"11xx", "2215", "2945", "2947ru", "2947ww", "xdb"}))
+		{
+			return 1;
+		}
+
+		unsigned short int tools_type = db_tools::TOOLS_AUTO;
+
+		if (vm.count("unpack"))
+			tools_type = db_tools::TOOLS_DB_UNPACK;
+
+		if (vm.count("pack"))
+			tools_type = db_tools::TOOLS_DB_PACK;
 
 		std::string fs_spec;
 
@@ -87,6 +113,7 @@ int main(int argc, char* argv[])
 			fs_flags |= xr_file_system::FSF_READ_ONLY;
 			msg("Working in read-only mode");
 		}
+
 		xr_file_system& fs = xr_file_system::instance();
 		if (!fs.initialize(fs_spec, fs_flags))
 		{
@@ -94,30 +121,111 @@ int main(int argc, char* argv[])
 			return 1;
 		}
 
-		//xr_log::instance().init("converter", "");
+		auto get_db_version = [](boost::program_options::variables_map& vm, const std::string& extension) -> db_tools::db_version
+		{
+			db_tools::db_version version = db_tools::DB_VERSION_AUTO;
 
-		tools_base* tools = nullptr;
-		switch (format)
-		{
-			case tools_base::TOOLS_DB:
+			if (vm.count("11xx"))
+				version = db_tools::DB_VERSION_1114;
+			if (vm.count("2215"))
+				version = db_tools::DB_VERSION_2215;
+			if (vm.count("2945"))
+				version = db_tools::DB_VERSION_2945;
+			if (vm.count("2947ru"))
+				version = db_tools::DB_VERSION_2947RU;
+			if (vm.count("2947ww"))
+				version = db_tools::DB_VERSION_2947WW;
+			if (vm.count("xdb"))
+				version = db_tools::DB_VERSION_XDB;
+
+			if (version == db_tools::DB_VERSION_AUTO)
 			{
-				tools = new db_unpacker;
+				if (db_tools::is_xdb(extension) || db_tools::is_db(extension))
+				{
+					msg("Auto-detected version: xdb");
+					version = db_tools::DB_VERSION_XDB;
+				}
+				else if (db_tools::is_xrp(extension))
+				{
+					msg("Auto-detected version: 1114");
+					version = db_tools::DB_VERSION_1114;
+				}
+				else if (db_tools::is_xp(extension))
+				{
+					msg("Auto-detected version: 2215");
+					version = db_tools::DB_VERSION_2215;
+				}
+			}
+			return version;
+		};
+
+		switch (tools_type)
+		{
+			case db_tools::TOOLS_DB_UNPACK:
+			{
+				std::string source_path = vm["unpack"].as<std::string>();
+				auto path_splitted = xr_file_system::split_path(source_path);
+				std::string extension = path_splitted.extension;
+
+				std::string destination_path = vm.count("out") ? vm["out"].as<std::string>() : "";
+
+				db_tools::db_version version = get_db_version(vm, extension);
+
+				if (version == db_tools::DB_VERSION_AUTO)
+				{
+					msg("unspecified DB format");
+					break;
+				}
+
+				std::string filter;
+				if(vm.count("flt"))
+				{
+					filter = vm["flt"].as<std::string>();
+				}
+
+				db_unpacker unpacker;
+				unpacker.process(source_path, destination_path, version, filter);
 				break;
 			}
-			case tools_base::TOOLS_FOLDER:
+			case db_tools::TOOLS_DB_PACK:
 			{
-				tools = new db_packer;
+				std::string source_path = vm["pack"].as<std::string>();
+
+				std::string destination_path = vm.count("out") ? vm["out"].as<std::string>() : "";
+				auto path_splitted = xr_file_system::split_path(destination_path);
+				std::string extension = path_splitted.extension;
+
+				db_tools::db_version version = get_db_version(vm, extension);
+
+				if (version == db_tools::DB_VERSION_AUTO)
+				{
+					msg("unspecified DB format");
+					break;
+				}
+
+				std::string filter;
+				if(vm.count("flt"))
+				{
+					filter = vm["flt"].as<std::string>();
+				}
+
+				std::string xdb_ud;
+				if(vm.count("xdb_ud"))
+				{
+					xdb_ud = vm["xdb_ud"].as<std::string>();
+				}
+
+				db_packer packer;
+				packer.process(source_path, destination_path, version, xdb_ud);
 				break;
 			}
+			default:
+			{
+				msg("No tools selected");
+				msg("Try \"db_converter --help\" for more information");
+				return 0;
+			}
 		}
-		if (tools == nullptr)
-		{
-			msg("No tools selected");
-			msg("Try \"db_converter --help\" for more information");
-			return 0;
-		}
-		tools->process(vm);
-		delete tools;
 	}
 	catch(std::exception& e)
 	{

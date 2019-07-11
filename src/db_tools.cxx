@@ -42,11 +42,6 @@ bool db_tools::is_known(const std::string& extension)
 	return is_db(extension) || is_xdb(extension) || is_xrp(extension) || is_xp(extension);
 }
 
-db_packer::~db_packer()
-{
-	delete_elements(m_files);
-}
-
 static bool write_file(xr_file_system& fs, const std::string& path, const void* data, size_t size)
 {
 	xr_writer* w = fs.w_open(path);
@@ -59,67 +54,27 @@ static bool write_file(xr_file_system& fs, const std::string& path, const void* 
 	return false;
 }
 
-void db_unpacker::process(const boost::program_options::variables_map& vm)
+db_unpacker::~db_unpacker() {}
+
+void db_unpacker::process(std::string source_path, std::string destination_path, db_version version, std::string filter)
 {
-	if(!vm.count("unpack"))
+	if(source_path.empty())
 	{
-		msg("Missing file path");
+		msg("Missing source file path");
 		return;
 	}
 
-	std::string source = vm["unpack"].as<std::string>();
+	auto path_splitted = xr_file_system::split_path(source_path);
 
-	auto path_splitted = xr_file_system::split_path(source);
-
-	std::string output_folder = path_splitted.folder;
+	std::string output_folder = destination_path.empty() ? path_splitted.folder : destination_path;
 	std::string extension = path_splitted.extension;
 
-	unsigned version = DB_VERSION_AUTO;
-
-	if (vm.count("11xx"))
-		version |= DB_VERSION_1114;
-	if (vm.count("2215"))
-		version |= DB_VERSION_2215;
-	if (vm.count("2945"))
-		version |= DB_VERSION_2945;
-	if (vm.count("2947ru"))
-		version |= DB_VERSION_2947RU;
-	if (vm.count("2947ww"))
-		version |= DB_VERSION_2947WW;
-	if (vm.count("xdb"))
-		version |= DB_VERSION_XDB;
-	if (version == DB_VERSION_AUTO)
-	{
-		if (is_xdb(extension))
-			version |= DB_VERSION_XDB;
-		else if (is_xrp(extension))
-			version |= DB_VERSION_1114;
-		else if (is_xp(extension))
-			version |= DB_VERSION_2215;
-	}
-	if (version == DB_VERSION_AUTO || (version & (version - 1)) != 0)
-	{
-		msg("unspecified DB format");
-		return;
-	}
-
 	xr_file_system& fs = xr_file_system::instance();
-	xr_reader* r = fs.r_open(source);
+	xr_reader* r = fs.r_open(source_path);
 	if (r == nullptr)
 	{
-		msg("can't load %s", source.c_str());
+		msg("can't load %s", source_path.c_str());
 		return;
-	}
-
-	if(vm.count("out"))
-	{
-		output_folder = vm["out"].as<std::string>();
-	}
-
-	std::string mask;
-	if(vm.count("flt"))
-	{
-		mask = vm["flt"].as<std::string>();
 	}
 
 	if (fs.create_path(output_folder))
@@ -130,6 +85,11 @@ void db_unpacker::process(const boost::program_options::variables_map& vm)
 		xr_reader* s = nullptr;
 		switch (version)
 		{
+			case DB_VERSION_AUTO:
+			{
+				msg("unspecified DB format");
+				break;
+			}
 			case DB_VERSION_1114:
 			case DB_VERSION_2215:
 			case DB_VERSION_2945:
@@ -156,26 +116,31 @@ void db_unpacker::process(const boost::program_options::variables_map& vm)
 			const uint8_t* data = static_cast<const uint8_t*>(r->data());
 			switch (version)
 			{
+				case DB_VERSION_AUTO:
+				{
+					msg("unspecified DB format");
+					break;
+				}
 				case DB_VERSION_1114:
 				{
-					extract_1114(output_folder, mask, s, data);
+					extract_1114(output_folder, filter, s, data);
 					break;
 				}
 				case DB_VERSION_2215:
 				{
-					extract_2215(output_folder, mask, s, data);
+					extract_2215(output_folder, filter, s, data);
 					break;
 				}
 				case DB_VERSION_2945:
 				{
-					extract_2945(output_folder, mask, s, data);
+					extract_2945(output_folder, filter, s, data);
 					break;
 				}
 				case DB_VERSION_2947RU:
 				case DB_VERSION_2947WW:
 				case DB_VERSION_XDB:
 				{
-					extract_2947(output_folder, mask, s, data);
+					extract_2947(output_folder, filter, s, data);
 					break;
 				}
 			}
@@ -184,7 +149,7 @@ void db_unpacker::process(const boost::program_options::variables_map& vm)
 
 		if (false && (s = r->open_chunk(DB_CHUNK_USERDATA)))
 		{
-			auto path_splitted = xr_file_system::split_path(source);
+			auto path_splitted = xr_file_system::split_path(source_path);
 
 			std::string file_name = path_splitted.name; // TODO: folder instead of name?
 
@@ -407,65 +372,59 @@ void db_unpacker::extract_2947(const std::string& prefix, const std::string& mas
 	}
 }
 
-void db_packer::process(const boost::program_options::variables_map& vm)
+db_packer::~db_packer()
 {
-	if(!vm.count("pack"))
+	delete_elements(m_files);
+}
+
+void db_packer::process(std::string source_path, std::string destination_path, db_version version, std::string xdb_ud)
+{
+	if(source_path.empty())
 	{
-		msg("Missing folder path");
+		msg("Missing source directory path");
 		return;
 	}
 
-	std::string source = vm["pack"].as<std::string>();
-	if (!xr_file_system::folder_exist(source))
+	if(destination_path.empty())
 	{
-		msg("can't find %s", source.c_str());
-		return;
-	}
-	xr_file_system::append_path_separator(m_root);
-
-	if(!vm.count("out"))
-	{
-		msg("Unspecifed output file");
+		msg("Missing destination file path");
 		return;
 	}
 
-	std::string target= vm["out"].as<std::string>();
-	auto path_splitted = xr_file_system::split_path(target);
-	std::string extension = path_splitted.extension;
-
-	unsigned version = DB_VERSION_AUTO;
-	if (vm.count("11xx") || vm.count("12215") || vm.count("12945"))
+	if (!xr_file_system::folder_exist(source_path))
 	{
-		msg("Unsupported DB format");
+		msg("can't find %s", source_path.c_str());
 		return;
 	}
 
-	if (vm.count("2947ru"))
-		version |= DB_VERSION_2947RU;
-	if (vm.count("2947ww"))
-		version |= DB_VERSION_2947WW;
-	if (vm.count("xdb") || is_xdb(extension))
-		version |= DB_VERSION_XDB;
-
-	if (version == DB_VERSION_AUTO || (version & (version - 1)) != 0)
+	if(version == DB_VERSION_AUTO)
 	{
 		msg("Unspecified DB format");
 		return;
 	}
 
-	xr_file_system& fs = xr_file_system::instance();
-	m_archive = fs.w_open(target);
-	if (m_archive == nullptr)
+	if(version == DB_VERSION_1114 || version == DB_VERSION_2215 || version == DB_VERSION_2945)
 	{
-		msg("Can't load %s", target.c_str());
+		msg("Unsupported DB format");
 		return;
 	}
 
-	std::string userdata;
-	if (version == DB_VERSION_XDB && vm.count("xdb_ud"))
+	xr_file_system::append_path_separator(m_root);
+
+	auto path_splitted = xr_file_system::split_path(destination_path);
+	std::string extension = path_splitted.extension;
+
+	xr_file_system& fs = xr_file_system::instance();
+	m_archive = fs.w_open(destination_path);
+	if (m_archive == nullptr)
 	{
-		userdata = vm["xdb_ud"].as<std::string>();
-		if (xr_reader* r = fs.r_open(userdata))
+		msg("Can't load %s", destination_path.c_str());
+		return;
+	}
+
+	if (version == DB_VERSION_XDB && !xdb_ud.empty())
+	{
+		if (xr_reader* r = fs.r_open(xdb_ud))
 		{
 			m_archive->open_chunk(DB_CHUNK_USERDATA);
 			m_archive->w_raw(r->data(), r->size());
@@ -474,14 +433,14 @@ void db_packer::process(const boost::program_options::variables_map& vm)
 		}
 		else
 		{
-			msg("can't load %s", userdata.c_str());
+			msg("can't load %s", xdb_ud.c_str());
 		}
 	}
 
 	m_archive->open_chunk(DB_CHUNK_DATA);
-	xr_file_system::append_path_separator(source);
-	m_root = source;
-	process_folder(source);
+	xr_file_system::append_path_separator(source_path);
+	m_root = source_path;
+	process_folder(source_path);
 	m_archive->close_chunk();
 
 	xr_memory_writer* w = new xr_memory_writer;

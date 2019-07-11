@@ -16,7 +16,7 @@ add_executable(${PROJECT_NAME}
 
 	"db_tools.cxx"
 	"db_tools.hxx"
-	"tools_base.hxx"
+
 	"xray_re/xr_types.hxx"
 	"xray_re/xr_scrambler.cxx"
 	"xray_re/xr_scrambler.hxx"

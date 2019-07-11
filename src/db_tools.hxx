@@ -2,7 +2,6 @@
 
 #include <string>
 #include <vector>
-#include "tools_base.hxx"
 #include "xray_re/xr_types.hxx"
 
 namespace xray_re
@@ -11,10 +10,9 @@ namespace xray_re
 	class xr_writer;
 };
 
-class db_tools: public tools_base
+class db_tools
 {
 public:
-	virtual void process(const boost::program_options::variables_map& vm) = 0;
 	static bool is_db(const std::string& extension);
 	static bool is_xdb(const std::string& extension);
 	static bool is_xrp(const std::string& extension);
@@ -39,6 +37,13 @@ public:
 		DB_VERSION_XDB    = 0x20,
 	};
 
+	enum source_format
+	{
+		TOOLS_AUTO      = 0x00,
+		TOOLS_DB_UNPACK = 0x01,
+		TOOLS_DB_PACK   = 0x02
+	};
+
 	struct db_file
 	{
 		bool operator<(const db_file& file) const;
@@ -54,7 +59,9 @@ public:
 class db_unpacker: public db_tools
 {
 public:
-	virtual void process(const boost::program_options::variables_map& vm);
+	virtual ~db_unpacker();
+
+	virtual void process(std::string source_path, std::string destination_path, db_version version, std::string filter);
 
 protected:
 	void extract_1114(const std::string& prefix, const std::string& mask, xray_re::xr_reader *s, const uint8_t *data) const;
@@ -68,7 +75,7 @@ class db_packer: public db_tools
 public:
 	virtual ~db_packer();
 
-	virtual void process(const boost::program_options::variables_map& vm);
+	virtual void process(std::string source_path, std::string destination_path, db_version version, std::string xdb_ud);
 
 protected:
 	void process_folder(const std::string& path = "");
