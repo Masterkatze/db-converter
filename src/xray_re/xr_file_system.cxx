@@ -37,7 +37,7 @@ bool xr_file_system::initialize(const std::string& fs_spec, unsigned flags)
 {
 	if (!fs_spec.empty() && fs_spec[0] != '\0')
 	{
-		xr_reader* r = r_open(fs_spec);
+		xr_reader *r = r_open(fs_spec);
 		if (r == nullptr)
 			return false;
 
@@ -82,7 +82,7 @@ xr_reader* xr_file_system::r_open(const std::string& path) const
 	//size_t file_size = static_cast<size_t>(lseek(fd, 0, SEEK_END));
 	size_t file_size = static_cast<size_t>(sb.st_size);
 
-	xr_reader* reader = nullptr;
+	xr_reader *reader = nullptr;
 
 	size_t mem_size;
 	size_t page_size = static_cast<size_t>(sysconf(_SC_PAGESIZE));
@@ -97,7 +97,7 @@ xr_reader* xr_file_system::r_open(const std::string& path) const
 		mem_size = file_size + page_size - remainder;
 	}
 
-	void* data = mmap(nullptr, mem_size, PROT_READ, MAP_PRIVATE | MAP_POPULATE, fd, 0);
+	void  *data = mmap(nullptr, mem_size, PROT_READ, MAP_PRIVATE | MAP_POPULATE, fd, 0);
 
 	if(file_size != 0)
 	{
@@ -115,7 +115,7 @@ xr_reader* xr_file_system::r_open(const std::string& path) const
 
 xr_reader* xr_file_system::r_open(const std::string& path, const std::string& name) const
 {
-	const path_alias* pa = find_path_alias(path);
+	const path_alias *pa = find_path_alias(path);
 	return pa ? r_open(pa->root + name) : nullptr;
 }
 
@@ -137,13 +137,13 @@ xr_writer* xr_file_system::w_open(const std::string& path, bool ignore_ro) const
 		return nullptr;
 	}
 
-	xr_writer* writer = new xr_file_writer_posix(fd);
+	xr_writer *writer = new xr_file_writer_posix(fd);
 	return writer;
 }
 
 xr_writer* xr_file_system::w_open(const std::string& path, const std::string& name,  bool ignore_ro) const
 {
-	const path_alias* pa = find_path_alias(path);
+	const path_alias *pa = find_path_alias(path);
 	return pa ? w_open(pa->root + name, ignore_ro) : nullptr;
 }
 
@@ -151,11 +151,11 @@ void xr_file_system::w_close(xr_writer *&w) const { delete w; w = nullptr; }
 
 bool xr_file_system::copy_file(const std::string &src_path, const std::string &src_name, const std::string &tgt_path, const std::string &tgt_name) const
 {
-	const path_alias* src_pa = find_path_alias(src_path);
+	const path_alias *src_pa = find_path_alias(src_path);
 	if (src_pa == nullptr)
 		return false;
 
-	const path_alias* tgt_pa = find_path_alias(tgt_path);
+	const path_alias *tgt_pa = find_path_alias(tgt_path);
 	if (tgt_pa == nullptr)
 		return false;
 
@@ -180,7 +180,7 @@ size_t xr_file_system::file_length(const std::string& path)
 
 //size_t xr_file_system::file_length(const std::string& path, const std::string& name) const
 //{
-//	const path_alias* pa = find_path_alias(path);
+//	const path_alias *pa = find_path_alias(path);
 //	return pa ? file_length(pa->root + name) : 0; // Check
 //}
 
@@ -197,7 +197,7 @@ uint32_t xr_file_system::file_age(const std::string& path)
 
 //uint32_t xr_file_system::file_age(const std::string& path, const std::string& name) const
 //{
-//	const path_alias* pa = find_path_alias(path);
+//	const path_alias *pa = find_path_alias(path);
 //	return pa ? file_age(pa->root + name) : 0;
 //}
 
@@ -208,7 +208,7 @@ bool xr_file_system::file_exist(const std::string& path)
 
 //bool xr_file_system::file_exist(const std::string& path, const std::string& name) const
 //{
-//	const path_alias* pa = find_path_alias(path);
+//	const path_alias *pa = find_path_alias(path);
 //	return pa ? file_exist(pa->root + name) : false;
 //}
 
@@ -219,7 +219,7 @@ bool xr_file_system::folder_exist(const std::string& path)
 
 //bool xr_file_system::folder_exist(const std::string& path, const std::string& name) const
 //{
-//	const path_alias* pa = find_path_alias(path);
+//	const path_alias *pa = find_path_alias(path);
 //	return pa ? folder_exist(pa->root + name) : false;
 //}
 
@@ -257,7 +257,7 @@ bool xr_file_system::create_folder(const std::string& path) const
 
 //bool xr_file_system::create_folder(const std::string& path, const std::string& name) const
 //{
-//	const path_alias* pa = find_path_alias(path);
+//	const path_alias *pa = find_path_alias(path);
 //	if (pa == nullptr)
 //		return false;
 
@@ -272,13 +272,13 @@ bool xr_file_system::create_folder(const std::string& path) const
 
 const char* xr_file_system::resolve_path(const std::string& path) const
 {
-	const path_alias* pa = find_path_alias(path);
+	const path_alias *pa = find_path_alias(path);
 	return pa != nullptr ? pa->root.c_str() : nullptr;
 }
 
 bool xr_file_system::resolve_path(const std::string& path, const std::string& name, std::string& full_path) const
 {
-	const path_alias* pa = find_path_alias(path);
+	const path_alias *pa = find_path_alias(path);
 	if (pa == nullptr)
 		return false;
 
@@ -292,7 +292,7 @@ bool xr_file_system::resolve_path(const std::string& path, const std::string& na
 
 void xr_file_system::update_path(const std::string& path, const std::string& root, const std::string& add)
 {
-	path_alias* new_pa;
+	path_alias *new_pa;
 	for (path_alias_vec_cit it = m_aliases.begin(), end = m_aliases.end(); it != end; ++it)
 	{
 		if ((*it)->path == path)
@@ -306,7 +306,7 @@ void xr_file_system::update_path(const std::string& path, const std::string& roo
 	m_aliases.push_back(new_pa);
 
 found_or_created:
-	const path_alias* pa = find_path_alias(root);
+	const path_alias *pa = find_path_alias(root);
 	if (pa)
 	{
 		new_pa->root = pa->root;
@@ -346,14 +346,14 @@ const xr_file_system::path_alias* xr_file_system::find_path_alias(const std::str
 
 xr_file_system::path_alias* xr_file_system::add_path_alias(const std::string& path, const std::string& root, const std::string& add)
 {
-	const path_alias* pa = find_path_alias(path.c_str());
+	const path_alias *pa = find_path_alias(path.c_str());
 
 	assert(pa == nullptr);
 
 	if (pa != nullptr)
 		return nullptr;
 
-	path_alias* new_pa = new path_alias;
+	path_alias *new_pa = new path_alias;
 	m_aliases.push_back(new_pa);
 	new_pa->path = path;
 
@@ -373,13 +373,13 @@ xr_file_system::path_alias* xr_file_system::add_path_alias(const std::string& pa
 	return new_pa;
 }
 
-static inline const char* next_line(const char* p, const char* end)
+static inline const char* next_line(const char *p, const char *end)
 {
 	while (p < end && *p++ != '\n') {}
 	return p;
 }
 
-static inline const char* read_alias(const char* p, const char* end)
+static inline const char* read_alias(const char *p, const char *end)
 {
 	if (p >= end || *p++ != '$')
 		return nullptr;
@@ -401,7 +401,7 @@ static inline const char* read_alias(const char* p, const char* end)
 	return nullptr;
 }
 
-static inline const char* skip_ws(const char* p, const char* end)
+static inline const char* skip_ws(const char *p, const char *end)
 {
 	while (p < end)
 	{
@@ -417,9 +417,9 @@ static inline const char* skip_ws(const char* p, const char* end)
 
 static inline const char* read_value(const char *&_p, const char *end)
 {
-	const char* p = skip_ws(_p, end);
+	const char *p = skip_ws(_p, end);
 	_p = p;
-	const char* last_ws = nullptr;
+	const char *last_ws = nullptr;
 	while (p < end)
 	{
 		int c = *p;
@@ -446,8 +446,8 @@ static inline const char* read_value(const char *&_p, const char *end)
 
 bool xr_file_system::parse_fs_spec(xr_reader& r)
 {
-	const char* p = r.pointer<const char>();
-	const char* end = p + r.size();
+	const char *p = r.pointer<const char>();
+	const char *end = p + r.size();
 	std::string alias, values[4];
 	for (unsigned line = 1; p < end; p = next_line(p, end), ++line)
 	{
@@ -455,7 +455,7 @@ bool xr_file_system::parse_fs_spec(xr_reader& r)
 		if (c == '$')
 
 		{
-			const char* last = read_alias(p, end);
+			const char *last = read_alias(p, end);
 			if (last == nullptr)
 			{
 				msg("can't parse line %u", line);
@@ -494,7 +494,7 @@ bool xr_file_system::parse_fs_spec(xr_reader& r)
 			if (i < 2)
 				values[1].clear();
 
-			path_alias* pa = add_path_alias(alias, values[0], values[1]);
+			path_alias *pa = add_path_alias(alias, values[0], values[1]);
 			if (pa == nullptr)
 			{
 				msg("can't parse line %u", line);
@@ -568,7 +568,7 @@ xr_file_writer_posix::~xr_file_writer_posix()
 	}
 }
 
-void xr_file_writer_posix::w_raw(const void* data, size_t length)
+void xr_file_writer_posix::w_raw(const void *data, size_t length)
 {
 	auto res = ::write(m_fd, data, length);
 

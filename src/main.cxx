@@ -2,39 +2,12 @@
 #include "xray_re/xr_file_system.hxx"
 #include "xray_re/xr_log.hxx"
 #include <boost/program_options.hpp>
+#include <iostream>
 
 using namespace xray_re;
+using namespace boost::program_options;
 
-void usage()
-{
-	printf("Usage examples:\n");
-	printf(" db_converter --unpack resources.db0 --xdb --dir ~/extracted\n");
-	printf(" db_converter --pack ~/dir_to_pack/ --out ~/packed.db --xdb\n\n");
-
-	printf("Common options:\n");
-	printf(" --ro            perform all the steps but do not write anything on disk\n\n");
-
-	printf("Unpack options:\n");
-	printf(" --unpack <FILE> unpack game archive\n");
-	printf(" --out <PATH>    output folder name\n");
-	printf(" --11xx          assume 1114/1154 archive format\n");
-	printf(" --2215          assume 2215 archive format\n");
-	printf(" --2945          assume 2945/2939 archive format\n");
-	printf(" --2947ru        assume release version format\n");
-	printf(" --2947ww        assume worldwide release version and 3120 format\n");
-	printf(" --xdb           assume .xdb or .db archive format\n");
-	printf(" --flt <MASK>    extract only files, filtered by mask\n\n");
-
-	printf("Pack options:\n");
-	printf(" --pack <FILE>   pack game archive\n");
-	printf(" --out <PATH>    output file name\n");
-	printf(" --2947ru        assume release version format\n");
-	printf(" --2947ww        assume world-wide release version and 3120 format\n");
-	printf(" --xdb           assume .xdb or .db archive format\n");
-	printf(" --xdb_ud <FILE> attach user data from <FILE>\n");
-}
-
-bool conflicting_options_exist(const boost::program_options::variables_map& vm, std::vector<std::string> options)
+bool conflicting_options_exist(const variables_map& vm, std::vector<std::string> options)
 {
 	std::string found_option = "";
 	for(const auto& option : options)
@@ -60,30 +33,42 @@ int main(int argc, char* argv[])
 {
 	try
 	{
-		boost::program_options::options_description desc("Allowed options");
-		desc.add_options()
+		options_description common_options("Common options", 82);
+		common_options.add_options()
 		    ("help", "produce help message")
-		    ("ro", "")
-		    ("unpack", boost::program_options::value<std::string>(), "")
-		    ("pack", boost::program_options::value<std::string>(), "")
-		    ("11xx", "")
-		    ("2215", "")
-		    ("2945", "")
-		    ("2947ru", "")
-		    ("2947ww", "")
-		    ("xdb", "")
-		    ("xdb_ud", boost::program_options::value<std::string>(), "")
-		    ("out", boost::program_options::value<std::string>(), "")
-		    ("dir", boost::program_options::value<std::string>(), "")
-		    ("flt", boost::program_options::value<std::string>(), "");
+		    ("ro", "perform all the steps but do not write anything on disk")
+		    ("out", value<std::string>()->value_name("<PATH>"), "output file or folder name")
+		    ("11xx", "assume 1114/1154 archive format (unpack only)")
+		    ("2215", "assume 2215 archive format (unpack only)")
+		    ("2945", "assume 2945/2939 archive format (unpack only)")
+		    ("2947ru", "assume release version format")
+		    ("2947ww", "assume worldwide release version and 3120 format")
+		    ("xdb", "assume .xdb or .db archive format");
 
-		boost::program_options::variables_map vm;
-		boost::program_options::store(boost::program_options::parse_command_line(argc, argv, desc), vm);
-		boost::program_options::notify(vm);
+		options_description unpack_options("Unpack options");
+		unpack_options.add_options()
+		    ("unpack", value<std::string>()->value_name("<FILE>"), "unpack game archive")
+		    ("flt", value<std::string>()->value_name("<MASK>"), "extract files filtered by mask");
+
+		options_description pack_options("Pack options");
+		pack_options.add_options()
+		    ("pack", value<std::string>()->value_name("<DIR>"), "pack game archive")
+		    ("xdb_ud", value<std::string>()->value_name("<FILE>"), "attach user data file");
+
+		options_description all_options;
+		all_options.add(common_options).add(unpack_options).add(pack_options);
+
+		variables_map vm;
+		store(parse_command_line(argc, argv, all_options), vm);
+		notify(vm);
 
 		if (vm.count("help"))
 		{
-			usage();
+			std::cout << "Usage examples:" << std::endl;
+			std::cout << "  db_converter --unpack resources.db0 --xdb --dir ~/extracted" << std::endl;
+			std::cout << "  db_converter --pack ~/dir_to_pack/ --out ~/packed.db --xdb" << std::endl;
+			std::cout << all_options << std::endl;
+
 			return 1;
 		}
 
@@ -121,7 +106,7 @@ int main(int argc, char* argv[])
 			return 1;
 		}
 
-		auto get_db_version = [](boost::program_options::variables_map& vm, const std::string& extension) -> db_tools::db_version
+		auto get_db_version = [](variables_map& vm, const std::string& extension) -> db_tools::db_version
 		{
 			db_tools::db_version version = db_tools::DB_VERSION_AUTO;
 

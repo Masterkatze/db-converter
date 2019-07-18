@@ -42,9 +42,9 @@ bool db_tools::is_known(const std::string& extension)
 	return is_db(extension) || is_xdb(extension) || is_xrp(extension) || is_xp(extension);
 }
 
-static bool write_file(xr_file_system& fs, const std::string& path, const void* data, size_t size)
+static bool write_file(xr_file_system& fs, const std::string& path, const void *data, size_t size)
 {
-	xr_writer* w = fs.w_open(path);
+	xr_writer *w = fs.w_open(path);
 	if (w)
 	{
 		w->w_raw(data, size);
@@ -70,7 +70,7 @@ void db_unpacker::process(std::string source_path, std::string destination_path,
 	std::string extension = path_splitted.extension;
 
 	xr_file_system& fs = xr_file_system::instance();
-	xr_reader* r = fs.r_open(source_path);
+	xr_reader *r = fs.r_open(source_path);
 	if (r == nullptr)
 	{
 		msg("can't load %s", source_path.c_str());
@@ -82,7 +82,7 @@ void db_unpacker::process(std::string source_path, std::string destination_path,
 		xr_file_system::append_path_separator(output_folder);
 
 		xr_scrambler scrambler;
-		xr_reader* s = nullptr;
+		xr_reader *s = nullptr;
 		switch (version)
 		{
 			case DB_VERSION_AUTO:
@@ -113,7 +113,7 @@ void db_unpacker::process(std::string source_path, std::string destination_path,
 		}
 		if (s)
 		{
-			const uint8_t* data = static_cast<const uint8_t*>(r->data());
+			const uint8_t *data = static_cast<const uint8_t*>(r->data());
 			switch (version)
 			{
 				case DB_VERSION_AUTO:
@@ -169,7 +169,7 @@ static bool write_file(xr_file_system& fs, const std::string& path, const uint8_
 	if (size_real != size_compressed)
 	{
 		lzo_uint size = size_real;
-		uint8_t* temp = new uint8_t[size];
+		uint8_t *temp = new uint8_t[size];
 		if (lzo1x_decompress_safe(data, size_compressed, temp, &size, nullptr) != LZO_E_OK)
 		{
 			delete[] temp;
@@ -247,7 +247,7 @@ void db_unpacker::extract_1114(const std::string& prefix, const std::string& mas
 			else
 			{
 				size_t real_size;
-				uint8_t* p;
+				uint8_t *p;
 				xr_lzhuf::decompress(p, real_size, data + offset, size);
 
 				if (real_size)
@@ -424,7 +424,7 @@ void db_packer::process(std::string source_path, std::string destination_path, d
 
 	if (version == DB_VERSION_XDB && !xdb_ud.empty())
 	{
-		if (xr_reader* r = fs.r_open(xdb_ud))
+		if (xr_reader *r = fs.r_open(xdb_ud))
 		{
 			m_archive->open_chunk(DB_CHUNK_USERDATA);
 			m_archive->w_raw(r->data(), r->size());
@@ -443,31 +443,30 @@ void db_packer::process(std::string source_path, std::string destination_path, d
 	process_folder(source_path);
 	m_archive->close_chunk();
 
-	xr_memory_writer* w = new xr_memory_writer;
+	xr_memory_writer *w = new xr_memory_writer;
 
 	msg("folders:");
 	std::sort(m_folders.begin(), m_folders.end());
-	for (auto it = m_folders.begin(), end = m_folders.end(); it != end; ++it)
+	for (const auto& folder : m_folders)
 	{
-		w->w_size_u16(it->size() + 16);
+		w->w_size_u16(folder.size() + 16);
 		w->w_u32(0);
 		w->w_u32(0);
 		w->w_u32(0);
-		w->w_raw(it->data(), it->size());
-		msg("  %s", it->c_str());
+		w->w_raw(folder.data(), folder.size());
+		msg("  %s", folder.c_str());
 		w->w_u32(0);
 	}
 
 	msg("files: ");
 
-	std::sort(m_files.begin(), m_files.end(), [] (const db_file* lhs, const db_file* rhs)
+	std::sort(m_files.begin(), m_files.end(), [] (const db_file *lhs, const db_file *rhs)
 	{
 		return lhs->path < rhs->path;
 	});
 
-	for (auto it = m_files.begin(), end = m_files.end(); it != end; ++it)
+	for (const auto& file : m_files)
 	{
-		db_file* file = *it;
 		w->w_size_u16(file->path.size() + 16);
 		w->w_size_u32(file->size_real);
 		w->w_size_u32(file->size_compressed);
@@ -477,7 +476,7 @@ void db_packer::process(std::string source_path, std::string destination_path, d
 		w->w_size_u32(file->offset);
 	}
 
-	uint8_t* data = nullptr;
+	uint8_t *data = nullptr;
 	size_t size = 0;
 	xr_lzhuf::compress(data, size, w->data(), w->tell());
 	delete w;
@@ -522,11 +521,41 @@ void db_packer::process_folder(const std::string& path)
 
 void db_packer::process_file(const std::string& path)
 {
+//	xr_file_system& fs = xr_file_system::instance();
+//	xr_reader *reader = fs.r_open(m_root + path);
+//	if (reader)
+//	{
+//		const uint8_t *data = static_cast<const uint8_t*>(reader->data());
+//		size_t offset = m_archive->tell();
+//		size_t size = reader->size();
+
+//		uint8_t *data_compressed = nullptr;
+//		size_t size_compressed = 0;
+//		xr_lzhuf::compress(data_compressed, size_compressed, data, size);
+//		msg("%d->%d %s", size, size_compressed, path.c_str());
+
+//		uint32_t crc = crc32(data_compressed, size_compressed);
+//		m_archive->w_raw(data_compressed, size_compressed);
+//		fs.r_close(reader);
+
+//		std::string path_lowercase = path;
+//		std::transform(path_lowercase.begin(), path_lowercase.end(), path_lowercase.begin(), [](unsigned char c) { return std::tolower(c); });
+
+//		db_file *file = new db_file;
+//		file->path = path_lowercase;
+//		file->crc = crc;
+//		file->offset = offset;
+//		file->size_real = size;
+//		file->size_compressed = size_compressed;
+//		m_files.push_back(file);
+//	}
+
 	xr_file_system& fs = xr_file_system::instance();
-	xr_reader* r = fs.r_open(m_root + path);
+	xr_reader *r = fs.r_open(m_root + path);
 	if (r)
 	{
-		size_t offset = m_archive->tell(), size = r->size();
+		size_t offset = m_archive->tell();
+		size_t size = r->size();
 		uint32_t crc = crc32(r->data(), size);
 		m_archive->w_raw(r->data(), size);
 		fs.r_close(r);
@@ -534,7 +563,7 @@ void db_packer::process_file(const std::string& path)
 		std::string path_lowercase = path;
 		std::transform(path_lowercase.begin(), path_lowercase.end(), path_lowercase.begin(), [](unsigned char c) { return std::tolower(c); });
 
-		db_file* file = new db_file;
+		db_file *file = new db_file;
 		file->path = path_lowercase;
 		file->crc = crc;
 		file->offset = offset;

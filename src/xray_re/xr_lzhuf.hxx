@@ -15,6 +15,7 @@ namespace xray_re
 			THRESHOLD = 2,
 			MAX_FREQ = 0x4000,
 		};
+
 		enum derived_params
 		{
 			NIL = N,
@@ -25,7 +26,7 @@ namespace xray_re
 
 		unsigned char text_buf[N + F - 1];
 		int match_position, match_length, lson[N + 1], rson[N + 257], dad[N + 1];
-		unsigned freq[T + 1];
+		unsigned int freq[T + 1];
 		int prnt[T + N_CHAR];
 		int son[T];
 
@@ -39,10 +40,10 @@ namespace xray_re
 		size_t m_src_pos;
 		size_t m_src_limit;
 
-		unsigned getbuf;
+		unsigned int getbuf;
 		unsigned char getlen;
 
-		unsigned putbuf;
+		unsigned int putbuf;
 		unsigned char putlen;
 
 		static const uint8_t p_len[64];
@@ -56,13 +57,13 @@ namespace xray_re
 
 		int GetBit(void);
 		int GetByte(void);
-		void Putcode(int l, unsigned c);
+		void Putcode(int l, unsigned int c);
 
 		void StartHuff(void);
 		void reconst(void);
 		void update(int c);
-		void EncodeChar(unsigned c);
-		void EncodePosition(unsigned c);
+		void EncodeChar(unsigned int c);
+		void EncodePosition(unsigned int c);
 		void EncodeEnd(void);
 		int DecodeChar(void);
 		int DecodePosition(void);
@@ -74,15 +75,15 @@ namespace xray_re
 		_lzhuf();
 		~_lzhuf();
 
-		void Encode(uint8_t*& _code, size_t& _codesize, const uint8_t* _text, size_t _textsize);
-		void Decode(uint8_t*& _text, size_t& _textsize, const uint8_t* _code, size_t _codesize);
+		void Encode(uint8_t *&_code, size_t& _codesize, const uint8_t *_text, size_t _textsize);
+		void Decode(uint8_t *&_text, size_t& _textsize, const uint8_t *_code, size_t _codesize);
 	};
 
 	class xr_lzhuf
 	{
 	private:
 		_lzhuf m_lzhuf;
-		static xr_lzhuf*instance();
+		static xr_lzhuf* instance();
 
 	protected:
 		xr_lzhuf();
@@ -90,20 +91,20 @@ namespace xray_re
 		xr_lzhuf& operator=(const xr_lzhuf& right);
 
 	public:
-		static void	compress(uint8_t*& _code, size_t& _codesize, const uint8_t* _text, size_t _textsize);
-		static void	decompress(uint8_t*& _text, size_t& _textsize, const uint8_t* _code, size_t _codesize);
+		static void	compress(uint8_t *&_code, size_t& _codesize, const uint8_t *_text, size_t _textsize);
+		static void	decompress(uint8_t* &_text, size_t& _textsize, const uint8_t *_code, size_t _codesize);
 	};
 
 	inline _lzhuf::_lzhuf() {}
 	inline _lzhuf::~_lzhuf() {}
 	inline xr_lzhuf::xr_lzhuf() {}
 
-	inline void xr_lzhuf::compress(uint8_t*& _code, size_t& _codesize, const uint8_t* _text, size_t _textsize)
+	inline void xr_lzhuf::compress(uint8_t *&_code, size_t& _codesize, const uint8_t *_text, size_t _textsize)
 	{
 		instance()->m_lzhuf.Encode(_code, _codesize, _text, _textsize);
 	}
 
-	inline void xr_lzhuf::decompress(uint8_t*& _text, size_t& _textsize, const uint8_t* _code, size_t _codesize)
+	inline void xr_lzhuf::decompress(uint8_t *&_text, size_t& _textsize, const uint8_t *_code, size_t _codesize)
 	{
 		instance()->m_lzhuf.Decode(_text, _textsize, _code, _codesize);
 	}
