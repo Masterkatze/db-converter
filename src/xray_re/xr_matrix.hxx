@@ -11,22 +11,25 @@ namespace xray_re
 
 	template<typename T> struct _matrix33
 	{
-		_matrix33<T>&	set(const _matrix33<T>& a);
-		_matrix33<T>&	set(const _vector3<T>& _i, const _vector3<T>& _j, const _vector3<T>& _k);
-		_matrix33<T>&	identity();
-		T		determinant() const;
-		union {
-			struct {
-				T		_11, _12, _13;
-				T		_21, _22, _23;
-				T		_31, _32, _33;
+		_matrix33<T>& set(const _matrix33<T>& a);
+		_matrix33<T>& set(const _vector3<T>& _i, const _vector3<T>& _j, const _vector3<T>& _k);
+		_matrix33<T>& identity();
+		T determinant() const;
+		union
+		{
+			struct
+			{
+				T  _11, _12, _13;
+				T  _21, _22, _23;
+				T  _31, _32, _33;
 			};
-			struct {
-				_vector3<T>	i;
-				_vector3<T>	j;
-				_vector3<T>	k;
+			struct
+			{
+				_vector3<T> i;
+				_vector3<T> j;
+				_vector3<T> k;
 			};
-			T			m[3][3];
+			T   m[3][3];
 		};
 	};
 
@@ -60,60 +63,64 @@ namespace xray_re
 
 	////////////////////////////////////////////////////////////////////////////////
 
-	template<typename T> struct _matrix {
-		template<typename F> _matrix<T>&	set(const _matrix<F>& a);
+	template<typename T> struct _matrix
+	{
+		template<typename F> _matrix<T>& set(const _matrix<F>& a);
 
-		_matrix<T>&	set(const _matrix33<T>& a);
-		_matrix<T>&	identity();
-		bool		is_identity() const;
-		_matrix<T>&	mk_xform(const _quaternion<T>& q, const _vector3<T>& v);
-		_matrix<T>&	rotation(const _quaternion<T>& q);
-		_matrix<T>&	translation(T x, T y, T z);
-		_matrix<T>&	translation(const _vector3<T>& v);
-		_matrix<T>&	mul(const _matrix<T>& a, const _matrix<T>& b);
-		_matrix<T>&	mul_43(const _matrix<T>& a, const _matrix<T>& b);
-		_matrix<T>&	mul_a_43(const _matrix<T>& a);
-		_matrix<T>&	mul_b_43(const _matrix<T>& b);
-		_matrix<T>&	invert_43();
-		_matrix<T>&	invert_43(const _matrix<T>& a);
-		_matrix<T>&	set_hpb(T h, T p, T b);		// not HPB (YXZ), but ZXY really?
-		_matrix<T>&	set_hpb(const _vector3<T>& v);
-		_matrix<T>&	set_xyz(T x, T y, T z);		// not XYZ, but reordered HPB (
-		_matrix<T>&	set_xyz(const _vector3<T>& v);
-		_matrix<T>&	set_xyz_i(T x, T y, T z);
-		_matrix<T>&	set_xyz_i(const _vector3<T>& v);
-		void		get_hpb(T& h, T& p, T& b) const;
-		void		get_hpb(_vector3<T>& v) const;
-		void		get_xyz(T& x, T& y, T& z) const;
-		void		get_xyz(_vector3<T>& v) const;
-		void		get_xyz_i(T& x, T& y, T& z) const;
-		void		get_xyz_i(_vector3<T>& v) const;
+		_matrix<T>& set(const _matrix33<T>& a);
+		_matrix<T>& identity();
+		bool is_identity() const;
+		_matrix<T>& mk_xform(const _quaternion<T>& q, const _vector3<T>& v);
+		_matrix<T>& rotation(const _quaternion<T>& q);
+		_matrix<T>& translation(T x, T y, T z);
+		_matrix<T>& translation(const _vector3<T>& v);
+		_matrix<T>& mul(const _matrix<T>& a, const _matrix<T>& b);
+		_matrix<T>& mul_43(const _matrix<T>& a, const _matrix<T>& b);
+		_matrix<T>& mul_a_43(const _matrix<T>& a);
+		_matrix<T>& mul_b_43(const _matrix<T>& b);
+		_matrix<T>& invert_43();
+		_matrix<T>& invert_43(const _matrix<T>& a);
+		_matrix<T>& set_hpb(T h, T p, T b);  // not HPB (YXZ), but ZXY really?
+		_matrix<T>& set_hpb(const _vector3<T>& v);
+		_matrix<T>& set_xyz(T x, T y, T z);  // not XYZ, but reordered HPB (
+		_matrix<T>& set_xyz(const _vector3<T>& v);
+		_matrix<T>& set_xyz_i(T x, T y, T z);
+		_matrix<T>& set_xyz_i(const _vector3<T>& v);
+		void get_hpb(T& h, T& p, T& b) const;
+		void get_hpb(_vector3<T>& v) const;
+		void get_xyz(T& x, T& y, T& z) const;
+		void get_xyz(_vector3<T>& v) const;
+		void get_xyz_i(T& x, T& y, T& z) const;
+		void get_xyz_i(_vector3<T>& v) const;
 
 		// these will operate with "canonical" euler angles
-		_matrix<T>&	set_euler_xyz(T x, T y, T z);
-		_matrix<T>&	set_euler_xyz(const _vector3<T>& v);
-		void		get_euler_xyz(T& x, T& y, T& z) const;
-		void		get_euler_xyz(_vector3<T>& v) const;
+		_matrix<T>& set_euler_xyz(T x, T y, T z);
+		_matrix<T>& set_euler_xyz(const _vector3<T>& v);
+		void get_euler_xyz(T& x, T& y, T& z) const;
+		void get_euler_xyz(_vector3<T>& v) const;
 
-		union {
-			struct {
-				T		_11, _12, _13, _14;
-				T		_21, _22, _23, _24;
-				T		_31, _32, _33, _34;
-				T		_41, _42, _43, _44;
+		union
+		{
+			struct
+			{
+				T  _11, _12, _13, _14;
+				T  _21, _22, _23, _24;
+				T  _31, _32, _33, _34;
+				T  _41, _42, _43, _44;
 			};
-			struct {
-				_vector3<T>	i;
-				T		_14_dummy;
-				_vector3<T>	j;
-				T		_24_dummy;
-				_vector3<T>	k;
-				T		_34_dummy;
-				_vector3<T>	c;
-				T		_44_dummy;
+			struct
+			{
+				_vector3<T> i;
+				T _14_dummy;
+				_vector3<T> j;
+				T _24_dummy;
+				_vector3<T> k;
+				T _34_dummy;
+				_vector3<T> c;
+				T _44_dummy;
 			};
-			T			m[4][4];
-			T			__array[16];
+			T m[4][4];
+			T __array[16];
 		};
 	};
 
@@ -122,7 +129,8 @@ namespace xray_re
 
 	template<typename T> template<typename F> inline _matrix<T>& _matrix<T>::set(const _matrix<F>& a)
 	{
-		for (uint_fast32_t i = 16; i != 0;) {
+		for (uint_fast32_t i = 16; i != 0;)
+		{
 			--i;
 			__array[i] = T(a.__array[i]);
 		}
@@ -131,28 +139,44 @@ namespace xray_re
 
 	template<typename T> inline _matrix<T>& _matrix<T>::set(const _matrix33<T>& a)
 	{
-		i.set(a.i); _14 = 0;
-		j.set(a.j); _24 = 0;
-		k.set(a.k); _34 = 0;
-		c.set(0, 0, 0); _44 = 1;
+		i.set(a.i);
+		_14 = 0;
+
+		j.set(a.j);
+		_24 = 0;
+
+		k.set(a.k);
+		_34 = 0;
+
+		c.set(0, 0, 0);
+		_44 = 1;
+
 		return *this;
 	}
 
 	template<typename T> inline _matrix<T>& _matrix<T>::identity()
 	{
-		i.set(1, 0, 0); _14 = 0;
-		j.set(0, 1, 0); _24 = 0;
-		k.set(0, 0, 1); _34 = 0;
-		c.set(0, 0, 0); _44 = 1;
+		i.set(1, 0, 0);
+		_14 = 0;
+
+		j.set(0, 1, 0);
+		_24 = 0;
+
+		k.set(0, 0, 1);
+		_34 = 0;
+
+		c.set(0, 0, 0);
+		_44 = 1;
+
 		return *this;
 	}
 
 	template<typename T> inline bool _matrix<T>::is_identity() const
 	{
 		return _11 == 1 && _12 == 0 && _13 == 0 && _14 == 0 &&
-		        _21 == 0 && _22 == 1 && _23 == 0 && _24 == 0 &&
-		        _31 == 0 && _32 == 0 && _33 == 1 && _34 == 0 &&
-		        _41 == 0 && _42 == 0 && _43 == 0 && _44 == 1;
+		       _21 == 0 && _22 == 1 && _23 == 0 && _24 == 0 &&
+		       _31 == 0 && _32 == 0 && _33 == 1 && _34 == 0 &&
+		       _41 == 0 && _42 == 0 && _43 == 0 && _44 == 1;
 	}
 
 	template<typename T> _matrix<T>& _matrix<T>::mk_xform(const _quaternion<T>& q, const _vector3<T>& v)
@@ -177,10 +201,17 @@ namespace xray_re
 		const T s = 2;
 #endif
 
-		i.set(T(1) - s*(yy + zz), s*(xy - wz), s*(xz + wy)); _14 = 0;
-		j.set(s*(xy + wz), T(1) - s*(xx + zz), s*(yz - wx)); _24 = 0;
-		k.set(s*(xz - wy), s*(yz + wx), T(1) - s*(xx + yy)); _34 = 0;
-		c.set(v); _44 = T(1);
+		i.set(T(1) - s*(yy + zz), s*(xy - wz), s*(xz + wy));
+		_14 = 0;
+
+		j.set(s*(xy + wz), T(1) - s*(xx + zz), s*(yz - wx));
+		_24 = 0;
+
+		k.set(s*(xz - wy), s*(yz + wx), T(1) - s*(xx + yy));
+		_34 = 0;
+
+		c.set(v);
+		_44 = T(1);
 
 		return *this;
 	}
@@ -277,17 +308,17 @@ namespace xray_re
 		_21 =-cf2/det;
 		_31 = cf3/det;
 
-		//	_11 = (a._22*a._33 - a._23*a._32)/det;
+		// _11 = (a._22*a._33 - a._23*a._32)/det;
 		_12 =-(a._12*a._33 - a._13*a._32)/det;
 		_13 = (a._12*a._23 - a._13*a._22)/det;
 		_14 = 0;
 
-		//	_21 =-(a._21*a._33 - a._23*a._31)/det;
+		// _21 =-(a._21*a._33 - a._23*a._31)/det;
 		_22 = (a._11*a._33 - a._13*a._31)/det;
 		_23 =-(a._11*a._23 - a._13*a._21)/det;
 		_24 = 0;
 
-		//	_31 = (a._21*a._32 - a._22*a._31)/det;
+		// _31 = (a._21*a._32 - a._22*a._31)/det;
 		_32 =-(a._11*a._32 - a._12*a._31)/det;
 		_33 = (a._11*a._22 - a._12*a._21)/det;
 		_34 = 0;
@@ -335,10 +366,17 @@ namespace xray_re
 		_43 = 0;
 		_44 = T(1);
 #else
-		i.set(ch*cb - sh*sp*sb, -cp*sb, ch*sb*sp + sh*cb); _14 = 0;
-		j.set(sp*sh*cb + ch*sb, cb*cp, sh*sb - sp*ch*cb); _24 = 0;
-		k.set(-cp*sh, sp, ch*cp); _34 = 0;
-		c.set(0, 0, 0); _44 = T(1);
+		i.set(ch*cb - sh*sp*sb, -cp*sb, ch*sb*sp + sh*cb);
+		_14 = 0;
+
+		j.set(sp*sh*cb + ch*sb, cb*cp, sh*sb - sp*ch*cb);
+		_24 = 0;
+
+		k.set(-cp*sh, sp, ch*cp);
+		_34 = 0;
+
+		c.set(0, 0, 0);
+		_44 = T(1);
 #endif
 
 		return *this;
@@ -362,11 +400,14 @@ namespace xray_re
 	template<typename T> void _matrix<T>::get_hpb(T& h, T& p, T& b) const
 	{
 		T cy = std::sqrt(_12*_12 + _22*_22);
-		if (cy > 16*xr_numeric_limits<T>::epsilon()) {
+		if (cy > 16*xr_numeric_limits<T>::epsilon())
+		{
 			h = -std::atan2(_31, _33);
 			p = -std::atan2(-_32, cy);
 			b = -std::atan2(_12, _22);
-		} else {
+		}
+		else
+		{
 			h = -std::atan2(-_13, _11);
 			p = -std::atan2(-_32, cy);
 			b = 0;
@@ -456,11 +497,14 @@ namespace xray_re
 	template<typename T> inline void _matrix<T>::get_euler_xyz(T& x, T& y, T& z) const
 	{
 		T cy = std::sqrt(_23*_23 + _33*_33);
-		if (cy > 16*xr_numeric_limits<T>::epsilon()) {
+		if (cy > 16*xr_numeric_limits<T>::epsilon())
+		{
 			z = std::atan2(_12, _11);
 			y = std::atan2(-_13, cy);
 			x = std::atan2(_23, _33);
-		} else {
+		}
+		else
+		{
 			z = std::atan2(-_21, _22);
 			y = std::atan2(-_13, cy);
 			x = 0;

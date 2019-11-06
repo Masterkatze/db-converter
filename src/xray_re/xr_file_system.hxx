@@ -40,6 +40,7 @@ namespace xray_re
 		xr_writer* w_open(const std::string& path, const std::string& name, bool ignore_ro = false) const;
 		void w_close(xr_writer*& w) const;
 
+		//TODO: check params
 		bool copy_file(const std::string& src_path, const std::string& src_name, const std::string& tgt_path, const std::string& tgt_name = nullptr) const;
 		bool copy_file(const std::string& src_path, const std::string& tgt_path) const;
 
@@ -108,34 +109,34 @@ namespace xray_re
 	{
 	public:
 		xr_file_writer_posix();
-		xr_file_writer_posix(int fd);
-		virtual ~xr_file_writer_posix();
-		virtual void w_raw(const void *data, size_t length);
-		virtual void seek(size_t pos);
-		virtual size_t tell();
+		explicit xr_file_writer_posix(int fd);
+		virtual ~xr_file_writer_posix() override;
+		virtual void w_raw(const void *data, size_t length) override;
+		virtual void seek(size_t pos) override;
+		virtual size_t tell() override;
 
 	private:
 		int m_fd;
 	};
 
-	const char PA_FS_ROOT[] = "$fs_root$";
-	const char PA_SDK_ROOT[] = "$sdk_root$";
-	const char PA_GAME_DATA[] = "$game_data$";
-	const char PA_GAME_CONFIG[] = "$game_config$";
-	const char PA_GAME_SCRIPTS[] = "$game_scripts$";
-	const char PA_GAME_MESHES[] = "$game_meshes$";
-	const char PA_GAME_TEXTURES[] = "$game_textures$";
-	const char PA_GAME_LEVELS[] = "$game_levels$";
-	const char PA_GAME_SPAWN[] = "$game_spawn$";
-	const char PA_LEVEL[] = "$level$";
-	const char PA_LOGS[] = "$logs$";
-	const char PA_SOUNDS[] = "$sounds$";
-	const char PA_TEXTURES[] = "$textures$";
-	const char PA_OBJECTS[] = "$objects$";
-	const char PA_CLIPS[] = "$clips$";
-	const char PA_MAPS[] = "$maps$";
-	const char PA_GROUPS[] = "$groups$";
-	const char PA_TEMP[] = "$temp$";
-	const char PA_IMPORT[] = "$import$";
-	const char PA_DETAIL_OBJECTS[] = "$detail_objects$";
+	static const char PA_FS_ROOT[] = "$fs_root$";
+	static const char PA_SDK_ROOT[] = "$sdk_root$";
+	static const char PA_GAME_DATA[] = "$game_data$";
+	static const char PA_GAME_CONFIG[] = "$game_config$";
+	static const char PA_GAME_SCRIPTS[] = "$game_scripts$";
+	static const char PA_GAME_MESHES[] = "$game_meshes$";
+	static const char PA_GAME_TEXTURES[] = "$game_textures$";
+	static const char PA_GAME_LEVELS[] = "$game_levels$";
+	static const char PA_GAME_SPAWN[] = "$game_spawn$";
+	static const char PA_LEVEL[] = "$level$";
+	static const char PA_LOGS[] = "$logs$";
+	static const char PA_SOUNDS[] = "$sounds$";
+	static const char PA_TEXTURES[] = "$textures$";
+	static const char PA_OBJECTS[] = "$objects$";
+	static const char PA_CLIPS[] = "$clips$";
+	static const char PA_MAPS[] = "$maps$";
+	static const char PA_GROUPS[] = "$groups$";
+	static const char PA_TEMP[] = "$temp$";
+	static const char PA_IMPORT[] = "$import$";
+	static const char PA_DETAIL_OBJECTS[] = "$detail_objects$";
 }

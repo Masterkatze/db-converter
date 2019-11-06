@@ -19,7 +19,7 @@ namespace xray_re
 		~xr_log();
 		static xr_log& instance();
 
-		void init(std::string name, std::string prefix = 0);
+		void init(std::string name, std::string prefix);
 
 		void diagnostic(const char* format, ...);
 		void diagnostic(const char* format, va_list ap);
@@ -33,7 +33,7 @@ namespace xray_re
 		xr_writer *m_log;
 	};
 
-	inline xr_log::xr_log(): m_buf_size(sizeof(m_buf) - 1), m_buf_p(m_buf), m_log(nullptr) {}
+	inline xr_log::xr_log(): m_buf(), m_buf_size(sizeof(m_buf) - 1), m_buf_p(m_buf), m_log(nullptr) {}
 
 	inline xr_log& xr_log::instance()
 	{

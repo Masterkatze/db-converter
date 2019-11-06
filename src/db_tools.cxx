@@ -5,7 +5,6 @@
 #include "xray_re/xr_lzhuf.hxx"
 #include "xray_re/xr_file_system.hxx"
 #include "xray_re/xr_utils.hxx"
-#include "xray_re/xr_string_utils.hxx"
 #include "xray_re/xr_log.hxx"
 #include "lzo/minilzo.h"
 #include "crc32/crc32.hxx"
@@ -24,17 +23,20 @@ bool db_tools::is_xrp(const std::string& extension)
 
 bool db_tools::is_xp(const std::string& extension)
 {
-	return extension.compare(0, 3, ".xp") == 0 && extension.size() == 4 && std::isalnum(extension[3]);
+	return extension.size() == 3 && extension == ".xp" ||
+	       extension.size() == 4 && extension.compare(0, 3, ".xp") == 0 && std::isalnum(extension[3]);
 }
 
 bool db_tools::is_xdb(const std::string& extension)
 {
-	return extension.compare(0, 4, ".xdb") == 0 && extension.size() == 5 && std::isalnum(extension[4]);
+	return extension.size() == 3 && extension == ".xdb" ||
+	       extension.size() == 4 && extension.compare(0, 3, ".xdb") == 0 && std::isalnum(extension[4]);
 }
 
 bool db_tools::is_db(const std::string& extension)
 {
-	return extension.compare(0, 3, ".db") == 0 && extension.size() == 4 && std::isalnum(extension[3]);
+	return extension.size() == 3 && extension == ".db" ||
+	       extension.size() == 4 && extension.compare(0, 3, ".db") == 0 && std::isalnum(extension[3]);
 }
 
 bool db_tools::is_known(const std::string& extension)

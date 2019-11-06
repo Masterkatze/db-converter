@@ -105,10 +105,17 @@ void xr_packet::w_sz(const std::string& value)
 
 void xr_packet::r_matrix(fmatrix& value)
 {
-	r_vec3(value.i); value._14 = 0;
-	r_vec3(value.j); value._24 = 0;
-	r_vec3(value.k); value._34 = 0;
-	r_vec3(value.c); value._44 = 1.f;
+	r_vec3(value.i);
+	value._14 = 0;
+
+	r_vec3(value.j);
+	value._24 = 0;
+
+	r_vec3(value.k);
+	value._34 = 0;
+
+	r_vec3(value.c);
+	value._44 = 1.f;
 }
 
 void xr_packet::w_matrix(const fmatrix& value)

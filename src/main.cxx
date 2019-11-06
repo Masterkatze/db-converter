@@ -106,7 +106,7 @@ int main(int argc, char* argv[])
 			return 1;
 		}
 
-		auto get_db_version = [](variables_map& vm, const std::string& extension) -> db_tools::db_version
+		auto get_db_version = [](const variables_map& vm, const std::string& extension)
 		{
 			db_tools::db_version version = db_tools::DB_VERSION_AUTO;
 

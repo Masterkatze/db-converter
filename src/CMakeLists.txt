@@ -3,20 +3,15 @@ INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIR})
 
 set (CMAKE_CXX_STANDARD 17)
 
-add_executable(${PROJECT_NAME}
-	"main.cxx"
-
+add_library(db_tools SHARED
+	"db_tools.cxx"
+	"db_tools.hxx"
+	"crc32/crc32.cxx"
+	"crc32/crc32.hxx"
 	"lzo/lzoconf.h"
 	"lzo/lzodefs.h"
 	"lzo/minilzo.c"
 	"lzo/minilzo.h"
-
-	"crc32/crc32.cxx"
-	"crc32/crc32.hxx"
-
-	"db_tools.cxx"
-	"db_tools.hxx"
-
 	"xray_re/xr_types.hxx"
 	"xray_re/xr_scrambler.cxx"
 	"xray_re/xr_scrambler.hxx"
@@ -47,5 +42,8 @@ add_executable(${PROJECT_NAME}
 	"xray_re/xr_log.cxx"
 	"xray_re/xr_log.hxx")
 
-target_link_libraries(${PROJECT_NAME} LINK_PUBLIC ${Boost_LIBRARIES})
+add_executable(${PROJECT_NAME}
+	"main.cxx")
+
+target_link_libraries(${PROJECT_NAME} LINK_PUBLIC ${Boost_LIBRARIES} db_tools)
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_17)

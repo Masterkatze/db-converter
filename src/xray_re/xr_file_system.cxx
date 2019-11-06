@@ -2,7 +2,6 @@
 #include "xr_math.hxx"
 #include "xr_utils.hxx"
 #include "xr_log.hxx"
-#include "xr_string_utils.hxx"
 #include "xr_log.hxx"
 
 #include <filesystem>
@@ -97,7 +96,7 @@ xr_reader* xr_file_system::r_open(const std::string& path) const
 		mem_size = file_size + page_size - remainder;
 	}
 
-	void  *data = mmap(nullptr, mem_size, PROT_READ, MAP_PRIVATE | MAP_POPULATE, fd, 0);
+	void *data = mmap(nullptr, mem_size, PROT_READ, MAP_PRIVATE, fd, 0);
 
 	if(file_size != 0)
 	{
@@ -346,7 +345,7 @@ const xr_file_system::path_alias* xr_file_system::find_path_alias(const std::str
 
 xr_file_system::path_alias* xr_file_system::add_path_alias(const std::string& path, const std::string& root, const std::string& add)
 {
-	const path_alias *pa = find_path_alias(path.c_str());
+	const path_alias *pa = find_path_alias(path);
 
 	assert(pa == nullptr);
 
@@ -357,7 +356,7 @@ xr_file_system::path_alias* xr_file_system::add_path_alias(const std::string& pa
 	m_aliases.push_back(new_pa);
 	new_pa->path = path;
 
-	pa = find_path_alias(root.c_str());
+	pa = find_path_alias(root);
 	if (pa)
 	{
 		new_pa->root = pa->root;
@@ -527,7 +526,7 @@ xr_mmap_reader_posix::~xr_mmap_reader_posix()
 
 	if(m_mem_length != 0)
 	{
-		int res = madvise(reinterpret_cast<void*>(const_cast<uint8_t*>(m_data)), m_mem_length, MADV_DONTNEED | MADV_FREE);
+		auto res = madvise(reinterpret_cast<void*>(const_cast<uint8_t*>(m_data)), m_mem_length, MADV_DONTNEED | MADV_FREE);
 		if (res == -1)
 		{
 			dbg("madvise failed: %s (errno=%d) ", strerror(errno), errno);

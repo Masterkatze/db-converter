@@ -1,6 +1,7 @@
 #pragma once
 
 #include <math.h>
+#include "xr_math.hxx"
 
 namespace xray_re
 {
