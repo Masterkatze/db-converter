@@ -16,6 +16,8 @@
 
 using namespace xray_re;
 
+constexpr const bool DB_DEBUG = false;
+
 bool db_tools::is_xrp(const std::string& extension)
 {
 	return extension == ".xrp";
@@ -23,20 +25,20 @@ bool db_tools::is_xrp(const std::string& extension)
 
 bool db_tools::is_xp(const std::string& extension)
 {
-	return extension.size() == 3 && extension == ".xp" ||
-	       extension.size() == 4 && extension.compare(0, 3, ".xp") == 0 && std::isalnum(extension[3]);
+	return (extension.size() == 3 && extension == ".xp") ||
+	       (extension.size() == 4 && extension.compare(0, 3, ".xp") == 0 && std::isalnum(extension[3]));
 }
 
 bool db_tools::is_xdb(const std::string& extension)
 {
-	return extension.size() == 3 && extension == ".xdb" ||
-	       extension.size() == 4 && extension.compare(0, 3, ".xdb") == 0 && std::isalnum(extension[4]);
+	return (extension.size() == 3 && extension == ".xdb") ||
+	       (extension.size() == 4 && extension.compare(0, 3, ".xdb") == 0 && std::isalnum(extension[4]));
 }
 
 bool db_tools::is_db(const std::string& extension)
 {
-	return extension.size() == 3 && extension == ".db" ||
-	       extension.size() == 4 && extension.compare(0, 3, ".db") == 0 && std::isalnum(extension[3]);
+	return (extension.size() == 3 && extension == ".db") ||
+	       (extension.size() == 4 && extension.compare(0, 3, ".db") == 0 && std::isalnum(extension[3]));
 }
 
 bool db_tools::is_known(const std::string& extension)
@@ -58,7 +60,7 @@ static bool write_file(xr_file_system& fs, const std::string& path, const void *
 
 db_unpacker::~db_unpacker() {}
 
-void db_unpacker::process(std::string source_path, std::string destination_path, db_version version, std::string filter)
+void db_unpacker::process(std::string& source_path, std::string& destination_path, db_version& version, std::string& filter)
 {
 	if(source_path.empty())
 	{
@@ -149,15 +151,15 @@ void db_unpacker::process(std::string source_path, std::string destination_path,
 			r->close_chunk(s);
 		}
 
-		if (false && (s = r->open_chunk(DB_CHUNK_USERDATA)))
-		{
-			auto path_splitted = xr_file_system::split_path(source_path);
+//		if (s = r->open_chunk(DB_CHUNK_USERDATA))
+//		{
+//			auto path_splitted = xr_file_system::split_path(source_path);
 
-			std::string file_name = path_splitted.name; // TODO: folder instead of name?
+//			std::string file_name = path_splitted.name; // TODO: folder instead of name?
 
-			write_file(fs, file_name.append("_userdata.ltx"), s->data(), s->size());
-			r->close_chunk(s);
-		}
+//			write_file(fs, file_name.append("_userdata.ltx"), s->data(), s->size());
+//			r->close_chunk(s);
+//		}
 	}
 	else
 	{
@@ -188,7 +190,7 @@ static bool write_file(xr_file_system& fs, const std::string& path, const uint8_
 
 		std::string folder = path_splitted.folder;
 
-		if(!fs.folder_exist(folder))
+		if(!xr_file_system::folder_exist(folder))
 		{
 			fs.create_path(folder);
 		}
@@ -205,7 +207,7 @@ static bool write_file(xr_file_system& fs, const std::string& path, const uint8_
 	return success;
 }
 
-void db_unpacker::extract_1114(const std::string& prefix, const std::string& mask, xr_reader *s, const uint8_t *data) const
+void db_unpacker::extract_1114(const std::string& prefix, const std::string& mask, xr_reader *s, const uint8_t *data)
 {
 	xr_file_system& fs = xr_file_system::instance();
 	for (std::string temp, path, folder; !s->eof(); )
@@ -235,11 +237,11 @@ void db_unpacker::extract_1114(const std::string& prefix, const std::string& mas
 		else
 		{
 			path = prefix;
-			auto path_splitted = fs.split_path(path.append(temp));
+			auto path_splitted = xr_file_system::split_path(path.append(temp));
 
 			std::string folder = path_splitted.folder;
 
-			if (!fs.folder_exist(folder))
+			if (!xr_file_system::folder_exist(folder))
 				fs.create_path(folder);
 
 			if (uncompressed)
@@ -261,7 +263,7 @@ void db_unpacker::extract_1114(const std::string& prefix, const std::string& mas
 	}
 }
 
-void db_unpacker::extract_2215(const std::string& prefix, const std::string& mask, xr_reader *s, const uint8_t *data) const
+void db_unpacker::extract_2215(const std::string& prefix, const std::string& mask, xr_reader *s, const uint8_t *data)
 {
 	xr_file_system& fs = xr_file_system::instance();
 	for (std::string path; !s->eof(); )
@@ -296,7 +298,7 @@ void db_unpacker::extract_2215(const std::string& prefix, const std::string& mas
 	}
 }
 
-void db_unpacker::extract_2945(const std::string& prefix, const std::string& mask, xr_reader *s, const uint8_t *data) const
+void db_unpacker::extract_2945(const std::string& prefix, const std::string& mask, xr_reader *s, const uint8_t *data)
 {
 	xr_file_system& fs = xr_file_system::instance();
 	for (std::string path; !s->eof(); )
@@ -333,7 +335,7 @@ void db_unpacker::extract_2945(const std::string& prefix, const std::string& mas
 	}
 }
 
-void db_unpacker::extract_2947(const std::string& prefix, const std::string& mask, xr_reader *s, const uint8_t *data) const
+void db_unpacker::extract_2947(const std::string& prefix, const std::string& mask, xr_reader *s, const uint8_t *data)
 {
 	xr_file_system& fs = xr_file_system::instance();
 	for (std::string path; !s->eof(); )
@@ -379,7 +381,7 @@ db_packer::~db_packer()
 	delete_elements(m_files);
 }
 
-void db_packer::process(std::string source_path, std::string destination_path, db_version version, std::string xdb_ud)
+void db_packer::process(std::string& source_path, std::string& destination_path, db_version& version, std::string& xdb_ud)
 {
 	if(source_path.empty())
 	{
@@ -445,7 +447,7 @@ void db_packer::process(std::string source_path, std::string destination_path, d
 	process_folder(source_path);
 	m_archive->close_chunk();
 
-	xr_memory_writer *w = new xr_memory_writer;
+	auto w = new xr_memory_writer;
 
 	msg("folders:");
 	std::sort(m_folders.begin(), m_folders.end());
@@ -565,7 +567,7 @@ void db_packer::process_file(const std::string& path)
 		std::string path_lowercase = path;
 		std::transform(path_lowercase.begin(), path_lowercase.end(), path_lowercase.begin(), [](unsigned char c) { return std::tolower(c); });
 
-		db_file *file = new db_file;
+		auto file = new db_file;
 		file->path = path_lowercase;
 		file->crc = crc;
 		file->offset = offset;

@@ -4,9 +4,7 @@
 #include <vector>
 #include <stack>
 #include <functional>
-#include "xr_vector2.hxx"
-#include "xr_vector3.hxx"
-#include "xr_color.hxx"
+#include "xr_types.hxx"
 
 namespace xray_re
 {
@@ -25,7 +23,6 @@ namespace xray_re
 		void open_chunk(uint32_t id);
 		void close_chunk();
 		void w_raw_chunk(uint32_t id, const void *data, size_t size);
-
 		void w_chunk(uint32_t id, const std::string& s);
 
 		template<typename T> void w_chunk(uint32_t id, const T& value);
@@ -37,10 +34,10 @@ namespace xray_re
 		template<typename T> void w(const T& value);
 
 		void w_sz(const std::string& value);
-		void w_sz(const char* value);
-		void w_sf(const char* format, ...);
+		void w_sz(const char *value);
+		void w_sf(const char *format, ...);
 		void w_s(const std::string& value);
-		void w_s(const char* value);
+		void w_s(const char *value);
 		void w_u32(uint32_t value);
 		void w_s32(int32_t value);
 		void w_u24(uint32_t value);
@@ -52,12 +49,6 @@ namespace xray_re
 		void w_float(float value);
 		void w_float_q16(float value, float min = 0, float max = 1.f);
 		void w_float_q8(float value, float min = 0, float max = 1.f);
-		void w_fvector3(const fvector3& v);
-		void w_fvector2(const fvector2& v);
-		void w_i32vector2(const i32vector2& v);
-		void w_fcolor(const fcolor& c);
-		void w_dir(const fvector3& v);
-		void w_sdir(const fvector3& v);
 		void w_size_u32(size_t value);
 		void w_size_u16(size_t value);
 		void w_size_u8(size_t value);
@@ -85,7 +76,7 @@ namespace xray_re
 	public:
 		xr_fake_writer();
 		virtual ~xr_fake_writer();
-		virtual void w_raw(const void* data, size_t size);
+		virtual void w_raw(const void *data, size_t size);
 		virtual void seek(size_t pos);
 		virtual size_t tell();
 
@@ -100,15 +91,15 @@ namespace xray_re
 		xr_memory_writer();
 		~xr_memory_writer();
 
-		virtual void w_raw(const void* data, size_t size);
+		virtual void w_raw(const void *data, size_t size);
 		virtual void seek(size_t pos);
 		virtual size_t tell();
 
 		const uint8_t* data() const;
 
-		bool save_to(const char* path);
+		bool save_to(const char *path);
 		bool save_to(const std::string& path);
-		bool save_to(const char* path, const std::string& name);
+		bool save_to(const char *path, const std::string& name);
 
 	private:
 		std::vector<uint8_t> m_buffer;
@@ -127,30 +118,6 @@ namespace xray_re
 	inline void xr_writer::w_s8(int8_t value) { w<int8_t>(value); }
 	inline void xr_writer::w_bool(bool value) { w_u8(value ? 1 : 0); }
 	inline void xr_writer::w_float(float value) { w<float>(value); }
-	inline void xr_writer::w_fvector3(const fvector3& v)
-	{
-		w_float(v.x);
-		w_float(v.y);
-		w_float(v.z);
-	}
-	inline void xr_writer::w_fvector2(const fvector2& v)
-	{
-		w_float(v.x);
-		w_float(v.y);
-	}
-	inline void xr_writer::w_i32vector2(const i32vector2& v)
-	{
-		w_s32(v.x);
-		w_s32(v.y);
-	}
-	inline void xr_writer::w_fcolor(const fcolor&c)
-	{
-		w_float(c.r);
-		w_float(c.g);
-		w_float(c.b);
-		w_float(c.a);
-	}
-
 	inline void xr_writer::w_size_u32(size_t value) { w_u32(static_cast<uint32_t>(value & UINT32_MAX)); }
 	inline void xr_writer::w_size_u16(size_t value) { w_u16(static_cast<uint16_t>(value & UINT16_MAX)); }
 	inline void xr_writer::w_size_u8(size_t value) { w_u8(static_cast<uint8_t>(value & UINT8_MAX)); }

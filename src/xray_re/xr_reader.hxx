@@ -3,9 +3,7 @@
 #include <string>
 #include <vector>
 #include <functional>
-#include "xr_vector2.hxx"
-#include "xr_vector3.hxx"
-#include "xr_color.hxx"
+#include "xr_types.hxx"
 
 namespace xray_re
 {
@@ -16,7 +14,7 @@ namespace xray_re
 	{
 	public:
 		xr_reader();
-		xr_reader(const void* data, size_t length);
+		xr_reader(const void *data, size_t length);
 		virtual ~xr_reader();
 
 		enum
@@ -29,7 +27,7 @@ namespace xray_re
 		void debug_find_chunk();
 		xr_reader* open_chunk(uint32_t id);
 		xr_reader* open_chunk(uint32_t id, const xr_scrambler& scrambler);
-		xr_reader* open_chunk_next(uint32_t& id, xr_reader* iter);
+		xr_reader* open_chunk_next(uint32_t& id, xr_reader *prev);
 		void close_chunk(xr_reader*& r) const;
 
 		size_t size() const;
@@ -40,7 +38,7 @@ namespace xray_re
 		size_t tell() const;
 		size_t elapsed() const;
 
-		size_t r_raw_chunk(uint32_t id, void* dest, size_t dest_size);
+		size_t r_raw_chunk(uint32_t id, void *dest, size_t dest_size);
 		void r_raw(void* dest, size_t dest_size);
 
 		template<typename T> size_t r_chunk(uint32_t id, T& value);
@@ -57,7 +55,7 @@ namespace xray_re
 		const char* skip_sz();
 		void r_s(std::string& value);
 		void r_sz(std::string& value);
-		void r_sz(char* dest, size_t dest_size);
+		void r_sz(char *dest, size_t dest_size);
 		uint32_t r_u32();
 		int32_t r_s32();
 		uint32_t r_u24();
@@ -67,14 +65,6 @@ namespace xray_re
 		int8_t r_s8();
 		bool r_bool();
 		float r_float();
-		float r_float_q16(float min = 0, float max = 1.f);
-		float r_float_q8(float min = 0, float max = 1.f);
-		void r_fvector3(fvector3& v);
-		void r_fvector2(fvector2& v);
-		void r_i32vector2(i32vector2& v);
-		void r_fcolor(fcolor& c);
-		void r_dir(fvector3& v);
-		void r_sdir(fvector3& v);
 		void r_packet(xr_packet& packet, size_t size);
 
 		template<typename T> struct f_r: public std::binary_function<T, xr_reader, void> {};
@@ -120,7 +110,7 @@ namespace xray_re
 	class xr_temp_reader: public xr_reader
 	{
 	public:
-		xr_temp_reader(const uint8_t* data, size_t size);
+		xr_temp_reader(const uint8_t *data, size_t size);
 		virtual ~xr_temp_reader();
 	};
 
@@ -143,29 +133,6 @@ namespace xray_re
 	inline int8_t xr_reader::r_s8() { return *m_p_s8++; }
 	inline bool xr_reader::r_bool() { return *m_p++ != 0; }
 	inline float xr_reader::r_float() { return *m_p_f++; }
-	inline void xr_reader::r_fvector3(fvector3& v)
-	{
-		v.x = *m_p_f++;
-		v.y = *m_p_f++;
-		v.z = *m_p_f++;
-	}
-	inline void xr_reader::r_fvector2(fvector2& v)
-	{
-		v.x = *m_p_f++;
-		v.y = *m_p_f++;
-	}
-	inline void xr_reader::r_i32vector2(i32vector2& v)
-	{
-		v.x = *m_p_s32++;
-		v.y = *m_p_s32++;
-	}
-	inline void xr_reader::r_fcolor(fcolor& c)
-	{
-		c.r = *m_p_f++;
-		c.g = *m_p_f++;
-		c.b = *m_p_f++;
-		c.a = *m_p_f++;
-	}
 
 	template<typename T> inline const T* xr_reader::pointer() const { return reinterpret_cast<const T*>(m_p); }
 	template<typename T> inline const T* xr_reader::skip(size_t n)
@@ -237,5 +204,5 @@ namespace xray_re
 		//assert(m_p == m_debug_find_chunk);
 	}
 
-	inline xr_temp_reader::xr_temp_reader(const uint8_t* data, size_t size): xr_reader(data, size) {}
+	inline xr_temp_reader::xr_temp_reader(const uint8_t *data, size_t size): xr_reader(data, size) {}
 }

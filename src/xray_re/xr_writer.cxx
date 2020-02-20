@@ -95,7 +95,7 @@ void xr_writer::w_packet(const xr_packet& packet)
 
 xr_memory_writer::xr_memory_writer(): m_pos(0) {}
 
-xr_memory_writer::~xr_memory_writer() {}
+xr_memory_writer::~xr_memory_writer() = default;
 
 void xr_memory_writer::w_raw(const void *data, size_t size)
 {
@@ -149,7 +149,7 @@ bool xr_memory_writer::save_to(const std::string& path)
 
 xr_fake_writer::xr_fake_writer(): m_pos(0), m_size(0) {}
 
-xr_fake_writer::~xr_fake_writer() {}
+xr_fake_writer::~xr_fake_writer() = default;
 
 void xr_fake_writer::w_raw(const void *data, size_t size)
 {

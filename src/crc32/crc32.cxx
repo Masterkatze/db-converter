@@ -41,8 +41,9 @@
  */
 
 #include "crc32.hxx"
+#include <array>
 
-static unsigned int crc32_tab[] =
+static std::array<unsigned int, 256> crc32_tab =
 {
 	0x00000000, 0x77073096, 0xee0e612c, 0x990951ba, 0x076dc419, 0x706af48f,
 	0xe963a535, 0x9e6495a3,	0x0edb8832, 0x79dcb8a4, 0xe0d5e91e, 0x97d2d988,
@@ -91,13 +92,13 @@ static unsigned int crc32_tab[] =
 
 unsigned int crc32(const void *buf, size_t size)
 {
-	unsigned int crc = ~0u;
-	const unsigned char* p = static_cast<const unsigned char*>(buf);
+	unsigned int crc = ~0U;
+	auto p = static_cast<const unsigned char*>(buf);
 
 	while (size--)
 	{
-		crc = crc32_tab[(crc ^ *p++) & 0xFF] ^ (crc >> 8);
+		crc = crc32_tab.at((crc ^ *p++) & 0xFF) ^ (crc >> 8);
 	}
 
-	return crc ^ ~0u;
+	return crc ^ ~0U;
 }

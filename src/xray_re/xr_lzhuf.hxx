@@ -51,22 +51,22 @@ namespace xray_re
 		static const uint8_t d_code[256];
 		static const uint8_t d_len[256];
 
-		void InitTree(void);
+		void InitTree();
 		void InsertNode(int r);
 		void DeleteNode(int p);
 
-		int GetBit(void);
+		int GetBit();
 		int GetByte(void);
 		void Putcode(int l, unsigned int c);
 
-		void StartHuff(void);
-		void reconst(void);
+		void StartHuff();
+		void reconst();
 		void update(int c);
 		void EncodeChar(unsigned int c);
 		void EncodePosition(unsigned int c);
-		void EncodeEnd(void);
-		int DecodeChar(void);
-		int DecodePosition(void);
+		void EncodeEnd();
+		int DecodeChar();
+		int DecodePosition();
 
 		int getc();
 		void putc(int c);
@@ -92,7 +92,7 @@ namespace xray_re
 
 	public:
 		static void	compress(uint8_t *&_code, size_t& _codesize, const uint8_t *_text, size_t _textsize);
-		static void	decompress(uint8_t* &_text, size_t& _textsize, const uint8_t *_code, size_t _codesize);
+		static void	decompress(uint8_t *&_text, size_t& _textsize, const uint8_t *_code, size_t _codesize);
 	};
 
 	inline _lzhuf::_lzhuf() {}

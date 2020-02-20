@@ -11,13 +11,13 @@ const uint32_t CHUNK_ID_MASK = ~xr_reader::CHUNK_COMPRESSED;
 
 xr_reader::xr_reader(): m_data(nullptr), m_p(nullptr), m_end(nullptr), m_next(nullptr) { }
 
-xr_reader::xr_reader(const void* data, size_t length)
+xr_reader::xr_reader(const void *data, size_t length)
 {
 	m_next = m_p = m_data = static_cast<const uint8_t*>(data);
 	m_end = static_cast<const uint8_t*>(data) + length;
 }
 
-xr_reader::~xr_reader() {}
+xr_reader::~xr_reader() = default;
 
 size_t xr_reader::find_chunk(uint32_t find_id, bool& compressed, bool reset)
 {
@@ -120,7 +120,7 @@ size_t xr_reader::r_raw_chunk(uint32_t id, void *dest, size_t dest_size)
 	return size;
 }
 
-void xr_reader::r_raw(void* dest, size_t dest_size)
+void xr_reader::r_raw(void *dest, size_t dest_size)
 {
 	assert(m_p + dest_size <= m_end);
 	std::memmove(dest, m_p, dest_size);
@@ -176,7 +176,7 @@ void xr_reader::r_sz(std::string& value)
 	m_p = p;
 }
 
-void xr_reader::r_sz(char* dest, size_t dest_size)
+void xr_reader::r_sz(char *dest, size_t dest_size)
 {
 	const uint8_t* p = m_p;
 	xr_assert(p < m_end && dest_size > 0);
@@ -205,9 +205,6 @@ void xr_reader::r_packet(xr_packet& packet, size_t size)
 {
 	packet.init(skip<uint8_t>(size), size);
 }
-
-float xr_reader::r_float_q16(float min, float max) { return r_u16()*((max - min)/65535.f) + min; }
-float xr_reader::r_float_q8(float min, float max) { return r_u8()*((max - min)/255.f) + min; }
 
 xr_temp_reader::~xr_temp_reader()
 {

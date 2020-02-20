@@ -1,5 +1,4 @@
 #include "xr_file_system.hxx"
-#include "xr_math.hxx"
 #include "xr_utils.hxx"
 #include "xr_log.hxx"
 #include "xr_log.hxx"
@@ -62,7 +61,7 @@ bool xr_file_system::initialize(const std::string& fs_spec, unsigned flags)
 	return !m_aliases.empty();
 }
 
-xr_reader* xr_file_system::r_open(const std::string& path) const
+xr_reader* xr_file_system::r_open(const std::string& path)
 {
 	auto fd = ::open(path.c_str(), O_RDONLY);
 	if (fd == -1)
@@ -71,7 +70,7 @@ xr_reader* xr_file_system::r_open(const std::string& path) const
 		return nullptr;
 	}
 
-	struct stat sb;
+	struct stat sb {};
 	if (fstat(fd, &sb) == -1)
 	{
 		dbg("stat failed for file \"%s\": %s (errno=%d) ", path.c_str(), strerror(errno), errno);
@@ -79,13 +78,13 @@ xr_reader* xr_file_system::r_open(const std::string& path) const
 	}
 
 	//size_t file_size = static_cast<size_t>(lseek(fd, 0, SEEK_END));
-	size_t file_size = static_cast<size_t>(sb.st_size);
+	auto file_size = static_cast<std::size_t>(sb.st_size);
 
 	xr_reader *reader = nullptr;
 
-	size_t mem_size;
-	size_t page_size = static_cast<size_t>(sysconf(_SC_PAGESIZE));
-	size_t remainder = file_size % page_size;
+	std::size_t mem_size;
+	auto page_size = static_cast<std::size_t>(sysconf(_SC_PAGESIZE));
+	std::size_t remainder = file_size % page_size;
 
 	if(remainder == 0)
 	{
@@ -118,7 +117,7 @@ xr_reader* xr_file_system::r_open(const std::string& path, const std::string& na
 	return pa ? r_open(pa->root + name) : nullptr;
 }
 
-void xr_file_system::r_close(xr_reader *&r) const { delete r; r = nullptr; }
+void xr_file_system::r_close(xr_reader *&r) { delete r; r = nullptr; }
 
 xr_writer* xr_file_system::w_open(const std::string& path, bool ignore_ro) const
 {
@@ -146,7 +145,7 @@ xr_writer* xr_file_system::w_open(const std::string& path, const std::string& na
 	return pa ? w_open(pa->root + name, ignore_ro) : nullptr;
 }
 
-void xr_file_system::w_close(xr_writer *&w) const { delete w; w = nullptr; }
+void xr_file_system::w_close(xr_writer *&w) { delete w; w = nullptr; }
 
 bool xr_file_system::copy_file(const std::string &src_path, const std::string &src_name, const std::string &tgt_path, const std::string &tgt_name) const
 {
@@ -185,7 +184,7 @@ size_t xr_file_system::file_length(const std::string& path)
 
 uint32_t xr_file_system::file_age(const std::string& path)
 {
-	struct stat st;
+	struct stat st {};
 	if(stat(path.c_str(), &st) == 0)
 	{
 		return static_cast<uint32_t>(st.st_mtime);
@@ -292,7 +291,7 @@ bool xr_file_system::resolve_path(const std::string& path, const std::string& na
 void xr_file_system::update_path(const std::string& path, const std::string& root, const std::string& add)
 {
 	path_alias *new_pa;
-	for (path_alias_vec_cit it = m_aliases.begin(), end = m_aliases.end(); it != end; ++it)
+	for (auto it = m_aliases.begin(), end = m_aliases.end(); it != end; ++it)
 	{
 		if ((*it)->path == path)
 		{
@@ -334,7 +333,7 @@ split_path_t xr_file_system::split_path(const std::string& path)
 
 const xr_file_system::path_alias* xr_file_system::find_path_alias(const std::string& path) const
 {
-	for (path_alias_vec_cit it = m_aliases.begin(), end = m_aliases.end(); it != end; ++it)
+	for (auto it = m_aliases.begin(), end = m_aliases.end(); it != end; ++it)
 	{
 		if ((*it)->path == path)
 			return *it;
@@ -352,7 +351,7 @@ xr_file_system::path_alias* xr_file_system::add_path_alias(const std::string& pa
 	if (pa != nullptr)
 		return nullptr;
 
-	path_alias *new_pa = new path_alias;
+	auto new_pa = new path_alias;
 	m_aliases.push_back(new_pa);
 	new_pa->path = path;
 
@@ -392,7 +391,7 @@ static inline const char* read_alias(const char *p, const char *end)
 		if (c == '$')
 			return p + 1;
 
-		else if (!std::isalnum(c) && c != '_')
+		if (!std::isalnum(c) && c != '_')
 			break;
 
 		++p;
@@ -447,7 +446,8 @@ bool xr_file_system::parse_fs_spec(xr_reader& r)
 {
 	const char *p = r.pointer<const char>();
 	const char *end = p + r.size();
-	std::string alias, values[4];
+	std::string alias;
+	std::array<std::string, 4> values;
 	for (unsigned line = 1; p < end; p = next_line(p, end), ++line)
 	{
 		int c = *p;
@@ -479,7 +479,7 @@ bool xr_file_system::parse_fs_spec(xr_reader& r)
 					return false;
 				}
 				if (i >= 0)
-					values[i].assign(p, last);
+					values.at(static_cast<std::size_t>(i)).assign(p, last);
 
 				p = last + 1;
 				++i;
@@ -491,9 +491,9 @@ bool xr_file_system::parse_fs_spec(xr_reader& r)
 			assert(i > 0);
 
 			if (i < 2)
-				values[1].clear();
+				values.at(1).clear();
 
-			path_alias *pa = add_path_alias(alias, values[0], values[1]);
+			path_alias *pa = add_path_alias(alias, values.at(0), values.at(1));
 			if (pa == nullptr)
 			{
 				msg("can't parse line %u", line);
@@ -501,9 +501,9 @@ bool xr_file_system::parse_fs_spec(xr_reader& r)
 			}
 
 			if (i > 2)
-				pa->filter = values[2];
+				pa->filter = values.at(2);
 			if (i > 3)
-				pa->caption = values[3];
+				pa->caption = values.at(3);
 		}
 		else if (c != ';' && !std::isspace(c))
 		{

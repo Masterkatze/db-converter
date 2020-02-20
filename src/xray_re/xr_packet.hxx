@@ -2,112 +2,97 @@
 
 #include <string>
 #include <vector>
-#include "xr_vector3.hxx"
-#include "xr_vector4.hxx"
-#include "xr_matrix.hxx"
-#include "xr_quaternion.hxx"
+#include "xr_types.hxx"
 
 namespace xray_re
 {
 	class xr_packet
 	{
-	public:
-		xr_packet();
+		public:
+			xr_packet();
 
-		enum
-		{
-			BUFFER_SIZE	= 0x1000,
-		};
+			enum
+			{
+				BUFFER_SIZE = 0x1000,
+			};
 
-		void clear();
+			void clear();
 
-		template<typename T> void	w(const T& value);
-		template<typename T> void	w_cseq(size_t n, const T values[]);
-		template<typename T> void	w_seq(const T& container);
-		void		w_raw(const void* data, size_t size);
-		void		w_sz(const std::string& value);
-		void		w_u64(uint64_t value);
-		void		w_s64(int64_t value);
-		void		w_u32(uint32_t value);
-		void		w_s32(int32_t value);
-		void		w_u24(uint32_t value);
-		void		w_u16(uint16_t value);
-		void		w_s16(int16_t value);
-		void		w_u8(uint8_t value);
-		void		w_s8(int8_t value);
-		void		w_bool(bool value);
-		void		w_float(float value);
-		void		w_float_q16(float value, float min = 0, float max = 1.f);
-		void		w_float_q8(float value, float min = 0, float max = 1.f);
-		void		w_vec3(const fvector3& value);
-		void		w_vec4(const fvector4& value);
-		void		w_quat(const fquaternion& value);
-		void		w_matrix(const fmatrix& value);
-		void		w_size_u32(size_t size);
-		void		w_size_u16(size_t size);
-		void		w_size_u8(size_t size);
-		void		w_dir(const fvector3& value);
-		void		w_sdir(const fvector3& value);
-		void		w_angle16(float value);
-		void		w_angle8(float value);
-		size_t		w_tell() const;
-		void		w_seek(size_t pos);
-		void		w_begin(uint16_t id);
+			template<typename T> void w(const T& value);
+			template<typename T> void w_cseq(size_t n, const T values[]);
+			template<typename T> void w_seq(const T& container);
+			void w_raw(const void *data, size_t size);
+			void w_sz(const std::string& value);
+			void w_u64(uint64_t value);
+			void w_s64(int64_t value);
+			void w_u32(uint32_t value);
+			void w_s32(int32_t value);
+			void w_u24(uint32_t value);
+			void w_u16(uint16_t value);
+			void w_s16(int16_t value);
+			void w_u8(uint8_t value);
+			void w_s8(int8_t value);
+			void w_bool(bool value);
+			void w_float(float value);
+			void w_float_q16(float value, float min = 0, float max = 1.f);
+			void w_float_q8(float value, float min = 0, float max = 1.f);
+			void w_size_u32(size_t size);
+			void w_size_u16(size_t size);
+			void w_size_u8(size_t size);
+			void w_angle16(float value);
+			void w_angle8(float value);
+			size_t w_tell() const;
+			void w_seek(size_t pos);
+			void w_begin(uint16_t id);
 
-		const char*	skip_sz();
+			const char*	skip_sz();
 
-		template<typename T> void	r(T& value);
-		template<typename T> T		r();
-		template<typename T> void	r_cseq(size_t n, T values[]);
-		template<typename T> void	r_seq(size_t n, T& container);
-		void		r_raw(void* data, size_t size);
-		void		r_sz(std::string& value);
-		uint64_t	r_u64();
-		void		r_u64(uint64_t& value);
-		void		r_s64(int64_t& value);
-		uint32_t	r_u32();
-		void		r_u32(uint32_t& value);
-		int32_t		r_s32();
-		void		r_s32(int32_t& value);
-		uint32_t	r_u24();
-		void		r_u24(uint32_t& value);
-		uint16_t	r_u16();
-		void		r_u16(uint16_t& value);
-		int16_t		r_s16();
-		void		r_s16(int16_t& value);
-		uint8_t		r_u8();
-		void		r_u8(uint8_t& value);
-		int8_t		r_s8();
-		void		r_s8(int8_t& value);
-		bool		r_bool();
-		void		r_bool(bool& value);
-		float		r_float();
-		void		r_float(float& value);
-		void		r_float_q16(float& value, float min = 0, float max = 1.f);
-		void		r_float_q8(float& value, float min = 0, float max = 1.f);
-		float		r_angle8();
-		void		r_angle8(float& value);
-		float		r_angle16();
-		void		r_angle16(float& value);
-		void		r_vec3(fvector3& value);
-		void		r_vec4(fvector4& value);
-		void		r_quat(fquaternion& value);
-		void		r_matrix(fmatrix& value);
-		void		r_dir(fvector3& value);
-		void		r_sdir(fvector3& value);
-		size_t		r_tell() const;
-		void		r_seek(size_t pos);
-		void		r_advance(size_t ofs);
-		void		r_begin(uint16_t& id);
-		bool		r_eof() const;
+			template<typename T> void	r(T& value);
+			template<typename T> T r();
+			template<typename T> void	r_cseq(size_t n, T values[]);
+			template<typename T> void	r_seq(size_t n, T& container);
+			void r_raw(void *data, size_t size);
+			void r_sz(std::string& value);
+			uint64_t	r_u64();
+			void r_u64(uint64_t& value);
+			void r_s64(int64_t& value);
+			uint32_t	r_u32();
+			void r_u32(uint32_t& value);
+			int32_t r_s32();
+			void r_s32(int32_t& value);
+			uint32_t	r_u24();
+			void r_u24(uint32_t& value);
+			uint16_t	r_u16();
+			void r_u16(uint16_t& value);
+			int16_t r_s16();
+			void r_s16(int16_t& value);
+			uint8_t r_u8();
+			void r_u8(uint8_t& value);
+			int8_t r_s8();
+			void r_s8(int8_t& value);
+			bool r_bool();
+			void r_bool(bool& value);
+			float r_float();
+			void r_float(float& value);
+			void r_float_q16(float& value, float min = 0, float max = 1.f);
+			void r_float_q8(float& value, float min = 0, float max = 1.f);
+			float r_angle8();
+			void r_angle8(float& value);
+			float r_angle16();
+			void r_angle16(float& value);
+			size_t r_tell() const;
+			void r_seek(size_t pos);
+			void r_advance(size_t ofs);
+			void r_begin(uint16_t& id);
+			bool r_eof() const;
 
-		void		init(const uint8_t* data, size_t size);
-		const uint8_t*	buf() const;
+			void init(const uint8_t *data, size_t size);
+			const uint8_t* buf() const;
 
-	private:
-		uint8_t		m_buf[BUFFER_SIZE];
-		size_t		m_w_pos;
-		size_t		m_r_pos;
+		private:
+			uint8_t m_buf[BUFFER_SIZE];
+			size_t m_w_pos;
+			size_t m_r_pos;
 	};
 
 	inline const uint8_t* xr_packet::buf() const { return &m_buf[0]; }
@@ -125,9 +110,6 @@ namespace xray_re
 	inline void xr_packet::w_bool(bool value) { w<uint8_t>(value ? 1 : 0); }
 	inline void xr_packet::w_float(float value) { w<float>(value); }
 	inline void xr_packet::w_float_q8(float value, float min, float max) { w_u8(uint8_t((value - min)*255.f/(max - min))); }
-	inline void xr_packet::w_vec3(const fvector3& value) { w(value); }
-	inline void xr_packet::w_vec4(const fvector4& value) { w(value); }
-	inline void xr_packet::w_quat(const fquaternion& value) { w(value); }
 	inline size_t xr_packet::w_tell() const { return m_w_pos; }
 	inline void xr_packet::w_seek(size_t pos) { m_w_pos = pos; assert(pos < sizeof(m_buf)); }
 	inline void xr_packet::w_size_u32(size_t value) { w_u32(static_cast<uint32_t>(value & UINT32_MAX)); }
@@ -156,9 +138,6 @@ namespace xray_re
 	inline float xr_packet::r_float() { return r<float>(); }
 	inline void xr_packet::r_float(float& value) { r(value); }
 	inline void xr_packet::r_float_q8(float& value, float min, float max) { value = r_u8()*(max - min)/255.f + min; }
-	inline void xr_packet::r_vec3(fvector3& value) { r(value); }
-	inline void xr_packet::r_vec4(fvector4& value) { r(value); }
-	inline void xr_packet::r_quat(fquaternion& value) { r(value); }
 	inline size_t xr_packet::r_tell() const { return m_r_pos; }
 	inline void xr_packet::r_seek(size_t pos) { m_r_pos = pos; /*assert(pos < m_w_pos);*/ }
 	inline void xr_packet::r_advance(size_t ofs) { m_r_pos += ofs; /*assert(m_r_pos < m_w_pos);*/ }

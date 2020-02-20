@@ -1,4 +1,5 @@
 #include <utility>
+#include <numeric>
 #include "xr_scrambler.hxx"
 
 using namespace xray_re;
@@ -27,12 +28,11 @@ void xr_scrambler::init(cipher_config cc)
 	}
 }
 
-void xr_scrambler::init_sboxes(int seed, int size_mult)
+void xr_scrambler::init_sboxes(int seed, std::size_t size_mult)
 {
-	for (int i = SBOX_SIZE - 1; i >= 0; --i)
-		m_enc_sbox[i] = uint8_t(i);
+	std::iota(m_enc_sbox.begin(), m_enc_sbox.end(), 0);
 
-	for (int i = size_mult*SBOX_SIZE, a, b; i != 0; --i)
+	for (std::size_t a, b, i = size_mult*SBOX_SIZE; i > 0; --i)
 	{
 		seed = 1 + seed * SEED_MULT;
 		a = (seed >> 24) & 0xff;
@@ -44,29 +44,29 @@ void xr_scrambler::init_sboxes(int seed, int size_mult)
 		}
 		while (a == b);
 
-		std::swap(m_enc_sbox[a], m_enc_sbox[b]);
+		std::swap(m_enc_sbox.at(a), m_enc_sbox.at(b));
 	}
 
-	for (int i = 0; i != SBOX_SIZE; ++i)
-		m_dec_sbox[m_enc_sbox[i]] = uint8_t(i);
+	for (std::size_t i = 0; i < SBOX_SIZE; ++i)
+		m_dec_sbox.at(m_enc_sbox.at(i)) = uint8_t(i);
 }
 
-void xr_scrambler::decrypt(uint8_t* dest, const uint8_t* src, size_t size) const
+void xr_scrambler::decrypt(uint8_t *dest, const uint8_t *src, size_t size) const
 {
 	int seed = m_seed;
 	for (size_t i = 0; i != size; ++i)
 	{
 		seed = 1 + seed * SEED_MULT;
-		dest[i] = m_dec_sbox[src[i] ^ ((seed >> 24) & 0xff)];
+		dest[i] = m_dec_sbox.at(src[i] ^ ((seed >> 24) & 0xff));
 	}
 }
 
-void xr_scrambler::encrypt(uint8_t* dest, const uint8_t* src, size_t size) const
+void xr_scrambler::encrypt(uint8_t *dest, const uint8_t *src, size_t size) const
 {
 	int seed = m_seed;
 	for (size_t i = 0; i != size; ++i)
 	{
 		seed = 1 + seed * SEED_MULT;
-		dest[i] = uint8_t(m_enc_sbox[src[i]] ^ ((seed >> 24) & 0xff));
+		dest[i] = uint8_t(m_enc_sbox.at(src[i]) ^ ((seed >> 24) & 0xff));
 	}
 }

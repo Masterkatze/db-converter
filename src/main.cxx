@@ -7,9 +7,9 @@
 using namespace xray_re;
 using namespace boost::program_options;
 
-bool conflicting_options_exist(const variables_map& vm, std::vector<std::string> options)
+bool conflicting_options_exist(const variables_map& vm, const std::vector<std::string>& options)
 {
-	std::string found_option = "";
+	std::string found_option;
 	for(const auto& option : options)
 	{
 		if(vm.count(option))
@@ -29,7 +29,7 @@ bool conflicting_options_exist(const variables_map& vm, std::vector<std::string>
 	return false;
 }
 
-int main(int argc, char* argv[])
+int main(int argc, char *argv[])
 {
 	try
 	{

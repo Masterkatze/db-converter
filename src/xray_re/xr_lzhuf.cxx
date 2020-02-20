@@ -16,7 +16,7 @@ All rights reserved. Permission granted for non-commercial use.
 
 using namespace xray_re;
 
-void _lzhuf::InitTree(void)
+void _lzhuf::InitTree()
 {
 	int i;
 
@@ -241,7 +241,7 @@ const uint8_t _lzhuf::d_len[256] =
 	0x08, 0x08, 0x08, 0x08, 0x08, 0x08, 0x08, 0x08,
 };
 
-int _lzhuf::GetBit(void)
+int _lzhuf::GetBit()
 {
 	int i;
 
@@ -259,7 +259,7 @@ int _lzhuf::GetBit(void)
 	return (i >> 15) & 1;
 }
 
-int _lzhuf::GetByte(void)
+int _lzhuf::GetByte()
 {
 	int i;
 
@@ -300,7 +300,7 @@ void _lzhuf::Putcode(int l, unsigned int c)
 	}
 }
 
-void _lzhuf::StartHuff(void)
+void _lzhuf::StartHuff()
 {
 	int i, j;
 
@@ -325,7 +325,7 @@ void _lzhuf::StartHuff(void)
 	prnt[R] = 0;
 }
 
-void _lzhuf::reconst(void)
+void _lzhuf::reconst()
 {
 	int i, j, k;
 	unsigned int f, l;
@@ -459,7 +459,7 @@ void _lzhuf::EncodePosition(unsigned int c)
 	Putcode(6, (c & 0x3f) << 10);
 }
 
-void _lzhuf::EncodeEnd(void)
+void _lzhuf::EncodeEnd()
 {
 	if (putlen)
 	{
@@ -468,7 +468,7 @@ void _lzhuf::EncodeEnd(void)
 	}
 }
 
-int _lzhuf::DecodeChar(void)
+int _lzhuf::DecodeChar()
 {
 	int c;
 
@@ -486,7 +486,7 @@ int _lzhuf::DecodeChar(void)
 	return c;
 }
 
-int _lzhuf::DecodePosition(void)
+int _lzhuf::DecodePosition()
 {
 	int i, j, c;
 

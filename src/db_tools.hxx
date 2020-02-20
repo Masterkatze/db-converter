@@ -61,13 +61,13 @@ class db_unpacker: public db_tools
 public:
 	virtual ~db_unpacker();
 
-	virtual void process(std::string source_path, std::string destination_path, db_version version, std::string filter);
+	virtual void process(std::string& source_path, std::string& destination_path, db_version& version, std::string& filter);
 
 protected:
-	void extract_1114(const std::string& prefix, const std::string& mask, xray_re::xr_reader *s, const uint8_t *data) const;
-	void extract_2215(const std::string& prefix, const std::string& mask, xray_re::xr_reader *s, const uint8_t *data) const;
-	void extract_2945(const std::string& prefix, const std::string& mask, xray_re::xr_reader *s, const uint8_t *data) const;
-	void extract_2947(const std::string& prefix, const std::string& mask, xray_re::xr_reader *s, const uint8_t *data) const;
+	static void extract_1114(const std::string& prefix, const std::string& mask, xray_re::xr_reader *s, const uint8_t *data);
+	static void extract_2215(const std::string& prefix, const std::string& mask, xray_re::xr_reader *s, const uint8_t *data);
+	static void extract_2945(const std::string& prefix, const std::string& mask, xray_re::xr_reader *s, const uint8_t *data);
+	static void extract_2947(const std::string& prefix, const std::string& mask, xray_re::xr_reader *s, const uint8_t *data);
 };
 
 class db_packer: public db_tools
@@ -75,7 +75,7 @@ class db_packer: public db_tools
 public:
 	virtual ~db_packer();
 
-	virtual void process(std::string source_path, std::string destination_path, db_version version, std::string xdb_ud);
+	virtual void process(std::string &source_path, std::string &destination_path, db_version &version, std::string &xdb_ud);
 
 protected:
 	void process_folder(const std::string& path = "");

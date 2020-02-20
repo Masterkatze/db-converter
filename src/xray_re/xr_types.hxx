@@ -10,7 +10,7 @@
 #include <cstddef>
 #include <cassert>
 
-const uint32_t BAD_IDX = UINT32_MAX;
+constexpr const uint32_t BAD_IDX = UINT32_MAX;
 
 #ifdef NDEBUG
 #define xr_assert(expr)		while (!(expr)) { xray_re::die("assertion failed", __FILE__, __LINE__); break; }
@@ -25,11 +25,11 @@ const uint32_t BAD_IDX = UINT32_MAX;
 #define xr_dim(x)	sizeof(x)/sizeof((x)[0])
 
 #define TYPEDEF_STD_VECTOR(type) \
-	typedef std::vector< type > type##_vec; \
-	typedef std::vector< type >::iterator type##_vec_it; \
-	typedef std::vector< type >::const_iterator type##_vec_cit;
+	typedef std::vector<type> type##_vec; \
+	typedef std::vector<type>::iterator type##_vec_it; \
+	typedef std::vector<type>::const_iterator type##_vec_cit;
 
 #define TYPEDEF_STD_VECTOR_PTR(type) \
-	typedef std::vector< type* > type##_vec; \
-	typedef std::vector< type* >::iterator type##_vec_it; \
-	typedef std::vector< type* >::const_iterator type##_vec_cit;
+	typedef std::vector<type*> type##_vec; \
+	typedef std::vector<type*>::iterator type##_vec_it; \
+	typedef std::vector<type*>::const_iterator type##_vec_cit;
