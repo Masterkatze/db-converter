@@ -1,18 +1,15 @@
 #include "xr_file_system.hxx"
 #include "xr_utils.hxx"
-#include "xr_log.hxx"
-#include "xr_log.hxx"
-
 #include <filesystem>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
 #include <sys/mman.h>
 #include <fcntl.h>
-#include <errno.h>
-#include <string.h>
-
-#include <iostream>
+#include <cerrno>
+#include <cstring>
+//#include <iostream>
+#include "spdlog/spdlog.h"
 
 using namespace xray_re;
 
@@ -66,14 +63,14 @@ xr_reader* xr_file_system::r_open(const std::string& path)
 	auto fd = ::open(path.c_str(), O_RDONLY);
 	if (fd == -1)
 	{
-		dbg("Failed to open file \"%s\": %s (errno=%d) ", path.c_str(), strerror(errno), errno);
+		spdlog::error("Failed to open file \"{}\": {}} (errno={}) ", path, strerror(errno), errno);
 		return nullptr;
 	}
 
 	struct stat sb {};
 	if (fstat(fd, &sb) == -1)
 	{
-		dbg("stat failed for file \"%s\": %s (errno=%d) ", path.c_str(), strerror(errno), errno);
+		spdlog::error("stat failed for file \"{}\": {} (errno={}) ", path, strerror(errno), errno);
 		return nullptr;
 	}
 
@@ -101,7 +98,7 @@ xr_reader* xr_file_system::r_open(const std::string& path)
 	{
 		if(data == MAP_FAILED)
 		{
-			dbg("mmap failed for file \"%s\": %s (errno=%d) ", path.c_str(), strerror(errno), errno);
+			spdlog::error("mmap failed for file \"{}\": {} (errno={}) ", path, strerror(errno), errno);
 			return nullptr;
 		}
 	}
@@ -123,7 +120,7 @@ xr_writer* xr_file_system::w_open(const std::string& path, bool ignore_ro) const
 {
 	if(!ignore_ro && read_only())
 	{
-		dbg("fs_ro: writing %s", path.c_str());
+		spdlog::info("fs_ro: writing {}", path);
 		return new xr_fake_writer();
 	}
 
@@ -131,7 +128,7 @@ xr_writer* xr_file_system::w_open(const std::string& path, bool ignore_ro) const
 
 	if (fd == -1)
 	{
-		//dbg("Failed to open file \"%s\": %s (errno=%d) ", path.c_str(), strerror(errno), errno);
+		spdlog::error("Failed to open file \"{}\": {} (errno={}) ", path, strerror(errno), errno);
 		return nullptr;
 	}
 
@@ -164,7 +161,7 @@ bool xr_file_system::copy_file(const std::string& src_path, const std::string& d
 {
 	if(read_only())
 	{
-		dbg("fs_ro: copying %s to %s", src_path.c_str(), dst_path.c_str());
+		spdlog::info("fs_ro: copying {} to {}", src_path, dst_path);
 		return true;
 	}
 
@@ -225,7 +222,7 @@ bool xr_file_system::create_path(const std::string& path) const
 {
 	if(read_only())
 	{
-		dbg("fs_ro: creating path %s", path.c_str());
+		spdlog::info("fs_ro: creating path {}", path);
 		return true;
 	}
 
@@ -241,7 +238,7 @@ bool xr_file_system::create_folder(const std::string& path) const
 {
 	if(read_only())
 	{
-		dbg("fs_ro: creating folder %s", path.c_str());
+		spdlog::info("fs_ro: creating folder {}", path);
 		return true;
 	}
 
@@ -261,7 +258,7 @@ bool xr_file_system::create_folder(const std::string& path) const
 
 //	if (read_only())
 //	{
-//		dbg("fs_ro: creating folder %s%s", pa->root.c_str(), name.c_str());
+//		dbg("fs_ro: creating folder {}{}", pa->root, name);
 //		return true;
 //	}
 
@@ -457,7 +454,7 @@ bool xr_file_system::parse_fs_spec(xr_reader& r)
 			const char *last = read_alias(p, end);
 			if (last == nullptr)
 			{
-				msg("can't parse line %u", line);
+				spdlog::error("can't parse line %u", line);
 				return false;
 			}
 			alias.assign(p, last);
@@ -465,7 +462,7 @@ bool xr_file_system::parse_fs_spec(xr_reader& r)
 			p = skip_ws(last, end);
 			if (p == end || *p++ != '=')
 			{
-				msg("can't parse line %u", line);
+				spdlog::error("can't parse line %u", line);
 				return false;
 			}
 
@@ -475,7 +472,7 @@ bool xr_file_system::parse_fs_spec(xr_reader& r)
 				last = read_value(p, end);
 				if (i < 0 && (last == end || *last != '|'))
 				{
-					msg("can't parse line %u", line);
+					spdlog::error("can't parse line %u", line);
 					return false;
 				}
 				if (i >= 0)
@@ -496,7 +493,7 @@ bool xr_file_system::parse_fs_spec(xr_reader& r)
 			path_alias *pa = add_path_alias(alias, values.at(0), values.at(1));
 			if (pa == nullptr)
 			{
-				msg("can't parse line %u", line);
+				spdlog::error("can't parse line %u", line);
 				return false;
 			}
 
@@ -507,7 +504,7 @@ bool xr_file_system::parse_fs_spec(xr_reader& r)
 		}
 		else if (c != ';' && !std::isspace(c))
 		{
-			msg("can't parse line %u", line);
+			spdlog::error("can't parse line %u", line);
 			return false;
 		}
 	}
@@ -529,26 +526,26 @@ xr_mmap_reader_posix::~xr_mmap_reader_posix()
 		auto res = madvise(reinterpret_cast<void*>(const_cast<uint8_t*>(m_data)), m_mem_length, MADV_DONTNEED | MADV_FREE);
 		if (res == -1)
 		{
-			dbg("madvise failed: %s (errno=%d) ", strerror(errno), errno);
+			spdlog::error("madvise failed: {} (errno={}) ", strerror(errno), errno);
 		}
 
 		res = munmap(reinterpret_cast<void*>(const_cast<uint8_t*>(m_data)), m_mem_length);
 		if(res != 0)
 		{
-			dbg("munmap failed with result %d: %s (errno=%d) ", res, strerror(errno), errno);
+			spdlog::error("munmap failed with result {}: {} (errno={}) ", res, strerror(errno), errno);
 		}
 	}
 
 	int res = posix_fadvise(m_fd, 0, static_cast<off_t>(m_file_length), POSIX_FADV_DONTNEED); //POSIX_FADV_NOREUSE
 	if (res != 0)
 	{
-		dbg("posix_fadvise failed: %s (errno=%d) ", strerror(errno), errno);
+		spdlog::error("posix_fadvise failed: {} (errno={}) ", strerror(errno), errno);
 	}
 
 	res = ::close(m_fd);
 	if (res == -1)
 	{
-		dbg("Failed to close file descriptor %d: %s (errno=%d) ", m_fd, strerror(errno), errno);
+		spdlog::error("Failed to close file descriptor {}: {} (errno={}) ", m_fd, strerror(errno), errno);
 	}
 }
 
@@ -563,7 +560,7 @@ xr_file_writer_posix::~xr_file_writer_posix()
 	auto res = ::close(m_fd);
 	if (res == -1)
 	{
-		dbg("Failed to close file descriptor %d: %s (errno=%d) ", m_fd, strerror(errno), errno);
+		spdlog::error("Failed to close file descriptor {}: {} (errno={}) ", m_fd, strerror(errno), errno);
 	}
 }
 
@@ -575,7 +572,7 @@ void xr_file_writer_posix::w_raw(const void *data, size_t length)
 	{
 		if (res == -1)
 		{
-			dbg("Failed to write to descriptor %d: %s (errno=%d) ", m_fd, strerror(errno), errno);
+			spdlog::error("Failed to write to descriptor {}: {} (errno={}) ", m_fd, strerror(errno), errno);
 		}
 
 		xr_assert(static_cast<size_t>(res) == length);
@@ -594,7 +591,7 @@ size_t xr_file_writer_posix::tell()
 	auto res = ::lseek64(m_fd, 0, SEEK_CUR);
 	if (res == -1)
 	{
-		dbg("Failed to close file descriptor %d: %s (errno=%d) ", m_fd, strerror(errno), errno);
+		spdlog::error("Failed to close file descriptor {}: {} (errno={}) ", m_fd, strerror(errno), errno);
 	}
 
 	return static_cast<size_t>(res);

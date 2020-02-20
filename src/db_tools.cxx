@@ -5,14 +5,12 @@
 #include "xray_re/xr_lzhuf.hxx"
 #include "xray_re/xr_file_system.hxx"
 #include "xray_re/xr_utils.hxx"
-#include "xray_re/xr_log.hxx"
 #include "lzo/minilzo.h"
 #include "crc32/crc32.hxx"
 #include <string>
 #include <algorithm>
 #include <filesystem>
-
-#define DB_DEBUG false
+#include "spdlog/spdlog.h"
 
 using namespace xray_re;
 
@@ -64,7 +62,7 @@ void db_unpacker::process(std::string& source_path, std::string& destination_pat
 {
 	if(source_path.empty())
 	{
-		msg("Missing source file path");
+		spdlog::error("Missing source file path");
 		return;
 	}
 
@@ -77,7 +75,7 @@ void db_unpacker::process(std::string& source_path, std::string& destination_pat
 	xr_reader *r = fs.r_open(source_path);
 	if (r == nullptr)
 	{
-		msg("can't load %s", source_path.c_str());
+		spdlog::error("can't load {}", source_path);
 		return;
 	}
 
@@ -91,7 +89,7 @@ void db_unpacker::process(std::string& source_path, std::string& destination_pat
 		{
 			case DB_VERSION_AUTO:
 			{
-				msg("unspecified DB format");
+				spdlog::error("unspecified DB format");
 				break;
 			}
 			case DB_VERSION_1114:
@@ -122,7 +120,7 @@ void db_unpacker::process(std::string& source_path, std::string& destination_pat
 			{
 				case DB_VERSION_AUTO:
 				{
-					msg("unspecified DB format");
+					spdlog::error("unspecified DB format");
 					break;
 				}
 				case DB_VERSION_1114:
@@ -163,7 +161,7 @@ void db_unpacker::process(std::string& source_path, std::string& destination_pat
 	}
 	else
 	{
-		msg("can't create %s", output_folder.c_str());
+		spdlog::error("can't create {}", output_folder);
 	}
 	fs.r_close(r);
 }
@@ -202,7 +200,7 @@ static bool write_file(xr_file_system& fs, const std::string& path, const uint8_
 		delete[] data;
 
 	if (!success)
-		msg("can't write %s", path.c_str());
+		spdlog::error("can't write {}", path);
 
 	return success;
 }
@@ -226,13 +224,13 @@ void db_unpacker::extract_1114(const std::string& prefix, const std::string& mas
 
 		if (DB_DEBUG && fs.read_only())
 		{
-			msg("%s", temp.c_str());
-			msg("  offset: %u", offset);
+			spdlog::debug("{}", temp);
+			spdlog::debug("  offset: %u", offset);
 
 			if (uncompressed)
-				msg("  size (real): %u", size);
+				spdlog::debug("  size (real): %u", size);
 			else
-				msg("  size (compressed): %u", size);
+				spdlog::debug("  size (compressed): %u", size);
 		}
 		else
 		{
@@ -282,10 +280,10 @@ void db_unpacker::extract_2215(const std::string& prefix, const std::string& mas
 
 		if (DB_DEBUG && fs.read_only())
 		{
-			msg("%s", path.c_str());
-			msg("  offset: %u", offset);
-			msg("  size (real): %u", size_real);
-			msg("  size (compressed): %u", size_compressed);
+			spdlog::debug("{}", path);
+			spdlog::debug("  offset: %u", offset);
+			spdlog::debug("  size (real): %u", size_real);
+			spdlog::debug("  size (compressed): %u", size_compressed);
 		}
 		else if (offset == 0)
 		{
@@ -318,11 +316,11 @@ void db_unpacker::extract_2945(const std::string& prefix, const std::string& mas
 
 		if (DB_DEBUG && fs.read_only())
 		{
-			msg("%s", path.c_str());
-			msg("  crc: 0x%8.8x", crc);
-			msg("  offset: %u", offset);
-			msg("  size (real): %u", size_real);
-			msg("  size (compressed): %u", size_compressed);
+			spdlog::debug("{}", path);
+			spdlog::debug("  crc: 0x%8.8x", crc);
+			spdlog::debug("  offset: %u", offset);
+			spdlog::debug("  size (real): %u", size_real);
+			spdlog::debug("  size (compressed): %u", size_compressed);
 		}
 		else if (offset == 0)
 		{
@@ -359,11 +357,11 @@ void db_unpacker::extract_2947(const std::string& prefix, const std::string& mas
 
 		if (DB_DEBUG && fs.read_only())
 		{
-			msg("%s", std::string(name, name_size).c_str());
-			msg("  offset: %u", offset);
-			msg("  size (real): %u", size_real);
-			msg("  size (compressed): %u", size_compressed);
-			msg("  crc: 0x%8.8" PRIx32, crc);
+			spdlog::debug("{}", std::string(name, name_size));
+			spdlog::debug("  offset: %u", offset);
+			spdlog::debug("  size (real): %u", size_real);
+			spdlog::debug("  size (compressed): %u", size_compressed);
+			spdlog::debug("  crc: 0x%8.8" PRIx32, crc);
 		}
 		else if (offset == 0)
 		{
@@ -385,31 +383,31 @@ void db_packer::process(std::string& source_path, std::string& destination_path,
 {
 	if(source_path.empty())
 	{
-		msg("Missing source directory path");
+		spdlog::error("Missing source directory path");
 		return;
 	}
 
 	if(destination_path.empty())
 	{
-		msg("Missing destination file path");
+		spdlog::error("Missing destination file path");
 		return;
 	}
 
 	if (!xr_file_system::folder_exist(source_path))
 	{
-		msg("can't find %s", source_path.c_str());
+		spdlog::error("can't find {}", source_path);
 		return;
 	}
 
 	if(version == DB_VERSION_AUTO)
 	{
-		msg("Unspecified DB format");
+		spdlog::error("Unspecified DB format");
 		return;
 	}
 
 	if(version == DB_VERSION_1114 || version == DB_VERSION_2215 || version == DB_VERSION_2945)
 	{
-		msg("Unsupported DB format");
+		spdlog::error("Unsupported DB format");
 		return;
 	}
 
@@ -422,7 +420,7 @@ void db_packer::process(std::string& source_path, std::string& destination_path,
 	m_archive = fs.w_open(destination_path);
 	if (m_archive == nullptr)
 	{
-		msg("Can't load %s", destination_path.c_str());
+		spdlog::error("Can't load {}", destination_path);
 		return;
 	}
 
@@ -437,7 +435,7 @@ void db_packer::process(std::string& source_path, std::string& destination_path,
 		}
 		else
 		{
-			msg("can't load %s", xdb_ud.c_str());
+			spdlog::error("can't load {}", xdb_ud);
 		}
 	}
 
@@ -449,7 +447,7 @@ void db_packer::process(std::string& source_path, std::string& destination_path,
 
 	auto w = new xr_memory_writer;
 
-	msg("folders:");
+	spdlog::info("folders:");
 	std::sort(m_folders.begin(), m_folders.end());
 	for (const auto& folder : m_folders)
 	{
@@ -458,11 +456,11 @@ void db_packer::process(std::string& source_path, std::string& destination_path,
 		w->w_u32(0);
 		w->w_u32(0);
 		w->w_raw(folder.data(), folder.size());
-		msg("  %s", folder.c_str());
+		spdlog::info("  {}", folder);
 		w->w_u32(0);
 	}
 
-	msg("files: ");
+	spdlog::info("files: ");
 
 	std::sort(m_files.begin(), m_files.end(), [] (const db_file *lhs, const db_file *rhs)
 	{
@@ -476,7 +474,7 @@ void db_packer::process(std::string& source_path, std::string& destination_path,
 		w->w_size_u32(file->size_compressed);
 		w->w_u32(file->crc);
 		w->w_raw(file->path.data(), file->path.size());
-		msg("  %s", file->path.c_str());
+		spdlog::info("  {}", file->path);
 		w->w_size_u32(file->offset);
 	}
 
@@ -536,7 +534,7 @@ void db_packer::process_file(const std::string& path)
 //		uint8_t *data_compressed = nullptr;
 //		size_t size_compressed = 0;
 //		xr_lzhuf::compress(data_compressed, size_compressed, data, size);
-//		msg("%d->%d %s", size, size_compressed, path.c_str());
+//		spdlog::info("{}->{} {}", size, size_compressed, path);
 
 //		uint32_t crc = crc32(data_compressed, size_compressed);
 //		m_archive->w_raw(data_compressed, size_compressed);

@@ -1,6 +1,6 @@
 #include "db_tools.hxx"
 #include "xray_re/xr_file_system.hxx"
-#include "xray_re/xr_log.hxx"
+#include "spdlog/spdlog.h"
 #include <boost/program_options.hpp>
 #include <iostream>
 
@@ -20,7 +20,7 @@ bool conflicting_options_exist(const variables_map& vm, const std::vector<std::s
 			}
 			else
 			{
-				msg("Conflicting options \"%s\" and \"%s\" specified", found_option.c_str(), option.c_str());
+				spdlog::error("Conflicting options \"{}\" and \"{}\" specified", found_option, option);
 				return true;
 			}
 		}
@@ -96,13 +96,13 @@ int main(int argc, char *argv[])
 		if (vm.count("ro"))
 		{
 			fs_flags |= xr_file_system::FSF_READ_ONLY;
-			msg("Working in read-only mode");
+			spdlog::info("Working in read-only mode");
 		}
 
 		xr_file_system& fs = xr_file_system::instance();
 		if (!fs.initialize(fs_spec, fs_flags))
 		{
-			msg("Can't initialize the file system");
+			spdlog::critical("Can't initialize the file system");
 			return 1;
 		}
 
@@ -127,17 +127,17 @@ int main(int argc, char *argv[])
 			{
 				if (db_tools::is_xdb(extension) || db_tools::is_db(extension))
 				{
-					msg("Auto-detected version: xdb");
+					spdlog::info("Auto-detected version: xdb");
 					version = db_tools::DB_VERSION_XDB;
 				}
 				else if (db_tools::is_xrp(extension))
 				{
-					msg("Auto-detected version: 1114");
+					spdlog::info("Auto-detected version: 1114");
 					version = db_tools::DB_VERSION_1114;
 				}
 				else if (db_tools::is_xp(extension))
 				{
-					msg("Auto-detected version: 2215");
+					spdlog::info("Auto-detected version: 2215");
 					version = db_tools::DB_VERSION_2215;
 				}
 			}
@@ -158,7 +158,7 @@ int main(int argc, char *argv[])
 
 				if (version == db_tools::DB_VERSION_AUTO)
 				{
-					msg("unspecified DB format");
+					spdlog::error("unspecified DB format");
 					break;
 				}
 
@@ -184,7 +184,7 @@ int main(int argc, char *argv[])
 
 				if (version == db_tools::DB_VERSION_AUTO)
 				{
-					msg("unspecified DB format");
+					spdlog::error("unspecified DB format");
 					break;
 				}
 
@@ -206,19 +206,19 @@ int main(int argc, char *argv[])
 			}
 			default:
 			{
-				msg("No tools selected");
-				msg("Try \"db_converter --help\" for more information");
+				spdlog::info("No tools selected");
+				spdlog::info("Try \"db_converter --help\" for more information");
 				return 0;
 			}
 		}
 	}
 	catch(std::exception& e)
 	{
-		msg("Exception: %s", e.what());
+		spdlog::critical("Exception: {}", e.what());
 	}
 	catch(...)
 	{
-		msg("Unknown exception");
+		spdlog::critical("Unknown exception");
 	}
 
 	return 0;

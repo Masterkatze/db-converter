@@ -3,7 +3,6 @@
 #include "xr_reader.hxx"
 #include "xr_lzhuf.hxx"
 #include "xr_packet.hxx"
-#include "xr_log.hxx"
 
 using namespace xray_re;
 

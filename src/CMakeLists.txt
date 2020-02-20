@@ -1,7 +1,10 @@
-FIND_PACKAGE(Boost COMPONENTS program_options REQUIRED )
-INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIR})
+set(CMAKE_CXX_STANDARD 17)
 
-set (CMAKE_CXX_STANDARD 17)
+find_package(Boost COMPONENTS program_options REQUIRED )
+include_directories(${Boost_INCLUDE_DIR})
+
+find_package(spdlog REQUIRED)
+add_compile_definitions(SPDLOG_FMT_EXTERNAL)
 
 add_library(db_tools SHARED
 	"db_tools.cxx"
@@ -27,12 +30,10 @@ add_library(db_tools SHARED
 	"xray_re/xr_writer.hxx"
 	"xray_re/xr_packet.cxx"
 	"xray_re/xr_packet.hxx"
-	"xray_re/xr_limits.hxx"
-	"xray_re/xr_log.cxx"
-	"xray_re/xr_log.hxx")
+	"xray_re/xr_limits.hxx")
 
 add_executable(${PROJECT_NAME}
 	"main.cxx")
 
-target_link_libraries(${PROJECT_NAME} LINK_PUBLIC ${Boost_LIBRARIES} db_tools)
+target_link_libraries(${PROJECT_NAME} PRIVATE ${Boost_LIBRARIES} db_tools spdlog::spdlog)
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_17)
