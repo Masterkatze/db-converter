@@ -29,8 +29,7 @@ add_library(db_tools SHARED
 	"xray_re/xr_writer.cxx"
 	"xray_re/xr_writer.hxx"
 	"xray_re/xr_packet.cxx"
-	"xray_re/xr_packet.hxx"
-	"xray_re/xr_limits.hxx")
+    "xray_re/xr_packet.hxx")
 
 add_executable(${PROJECT_NAME}
 	"main.cxx")

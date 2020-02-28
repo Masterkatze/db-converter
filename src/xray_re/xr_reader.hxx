@@ -17,11 +17,6 @@ namespace xray_re
 		xr_reader(const void *data, size_t length);
 		virtual ~xr_reader();
 
-		enum
-		{
-			CHUNK_COMPRESSED = 0x80000000,
-		};
-
 		size_t find_chunk(uint32_t id, bool& compressed, bool reset = true);
 		size_t find_chunk(uint32_t id);
 		void debug_find_chunk();
@@ -103,7 +98,7 @@ namespace xray_re
 		const uint8_t *m_next;
 
 	private:
-		//const uint8_t *m_debug_find_chunk;
+		const uint8_t *m_debug_find_chunk;
 	};
 
 	// for compressed chunks
@@ -201,7 +196,7 @@ namespace xray_re
 
 	inline void xr_reader::debug_find_chunk()
 	{
-		//assert(m_p == m_debug_find_chunk);
+		assert(m_p == m_debug_find_chunk);
 	}
 
 	inline xr_temp_reader::xr_temp_reader(const uint8_t *data, size_t size): xr_reader(data, size) {}

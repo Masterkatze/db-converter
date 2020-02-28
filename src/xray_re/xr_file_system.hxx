@@ -40,7 +40,6 @@ namespace xray_re
 		xr_writer* w_open(const std::string& path, const std::string& name, bool ignore_ro = false) const;
 		static void w_close(xr_writer*& w);
 
-		//TODO: check params
 		bool copy_file(const std::string& src_path, const std::string& src_name, const std::string& tgt_path, const std::string& tgt_name = nullptr) const;
 		bool copy_file(const std::string& src_path, const std::string& tgt_path) const;
 
@@ -78,17 +77,16 @@ namespace xray_re
 			std::string filter;
 			std::string caption;
 		};
-		TYPEDEF_STD_VECTOR_PTR(path_alias)
 
 		const path_alias* find_path_alias(const std::string& path) const;
 		path_alias* add_path_alias(const std::string& path, const std::string& root, const std::string& add);
-		bool parse_fs_spec(xr_reader& r);
+		bool parse_fs_spec(xr_reader& reader);
 
 		void working_folder(std::string& folder);
 
 	private:
-		path_alias_vec m_aliases;
-		unsigned m_flags;
+		std::vector<path_alias*> m_aliases;
+		unsigned int m_flags;
 	};
 
 	class xr_mmap_reader_posix: public xr_reader
@@ -119,23 +117,4 @@ namespace xray_re
 	};
 
 	static const std::string PA_FS_ROOT = "$fs_root$";
-	static const std::string PA_SDK_ROOT = "$sdk_root$";
-	static const std::string PA_GAME_DATA = "$game_data$";
-	static const std::string PA_GAME_CONFIG = "$game_config$";
-	static const std::string PA_GAME_SCRIPTS = "$game_scripts$";
-	static const std::string PA_GAME_MESHES = "$game_meshes$";
-	static const std::string PA_GAME_TEXTURES = "$game_textures$";
-	static const std::string PA_GAME_LEVELS = "$game_levels$";
-	static const std::string PA_GAME_SPAWN = "$game_spawn$";
-	static const std::string PA_LEVEL = "$level$";
-	static const std::string PA_LOGS = "$logs$";
-	static const std::string PA_SOUNDS = "$sounds$";
-	static const std::string PA_TEXTURES = "$textures$";
-	static const std::string PA_OBJECTS = "$objects$";
-	static const std::string PA_CLIPS = "$clips$";
-	static const std::string PA_MAPS = "$maps$";
-	static const std::string PA_GROUPS = "$groups$";
-	static const std::string PA_TEMP = "$temp$";
-	static const std::string PA_IMPORT = "$import$";
-	static const std::string PA_DETAIL_OBJECTS = "$detail_objects$";
 }

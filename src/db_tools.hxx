@@ -13,11 +13,15 @@ namespace xray_re
 class db_tools
 {
 public:
+	virtual ~db_tools() = default;
+
 	static bool is_db(const std::string& extension);
 	static bool is_xdb(const std::string& extension);
 	static bool is_xrp(const std::string& extension);
 	static bool is_xp(const std::string& extension);
 	static bool is_known(const std::string& extension);
+
+	static void set_debug(const bool value);
 
 	enum
 	{
@@ -54,14 +58,16 @@ public:
 		size_t size_compressed;
 		unsigned int crc;
 	};
+
+	static bool m_debug;
 };
 
 class db_unpacker: public db_tools
 {
 public:
-	virtual ~db_unpacker();
+	~db_unpacker() = default;
 
-	virtual void process(std::string& source_path, std::string& destination_path, db_version& version, std::string& filter);
+	void process(std::string& source_path, std::string& destination_path, db_version& version, std::string& filter);
 
 protected:
 	static void extract_1114(const std::string& prefix, const std::string& mask, xray_re::xr_reader *s, const uint8_t *data);
@@ -73,9 +79,9 @@ protected:
 class db_packer: public db_tools
 {
 public:
-	virtual ~db_packer();
+	~db_packer();
 
-	virtual void process(std::string &source_path, std::string &destination_path, db_version &version, std::string &xdb_ud);
+	void process(std::string &source_path, std::string &destination_path, db_version &version, std::string &xdb_ud);
 
 protected:
 	void process_folder(const std::string& path = "");

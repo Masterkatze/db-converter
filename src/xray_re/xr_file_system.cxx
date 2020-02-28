@@ -32,11 +32,11 @@ bool xr_file_system::initialize(const std::string& fs_spec, unsigned flags)
 {
 	if (!fs_spec.empty() && fs_spec[0] != '\0')
 	{
-		xr_reader *r = r_open(fs_spec);
-		if (r == nullptr)
+		xr_reader *reader = r_open(fs_spec);
+		if (reader == nullptr)
 			return false;
 
-		if (parse_fs_spec(*r))
+		if (parse_fs_spec(*reader))
 		{
 			auto path_splitted = xr_file_system::split_path(fs_spec);
 
@@ -44,14 +44,10 @@ bool xr_file_system::initialize(const std::string& fs_spec, unsigned flags)
 
 			add_path_alias(PA_FS_ROOT, folder, "");
 		}
-		r_close(r);
+		r_close(reader);
 	}
 	else
 	{
-#if 0
-		std::string folder;
-		get_working_folder(folder);
-#endif
 		add_path_alias(PA_FS_ROOT, "", "");
 	}
 	m_flags = flags;
@@ -63,7 +59,7 @@ xr_reader* xr_file_system::r_open(const std::string& path)
 	auto fd = ::open(path.c_str(), O_RDONLY);
 	if (fd == -1)
 	{
-		spdlog::error("Failed to open file \"{}\": {}} (errno={}) ", path, strerror(errno), errno);
+		spdlog::error("Failed to open file \"{}\": {} (errno={}) ", path, strerror(errno), errno);
 		return nullptr;
 	}
 
@@ -76,8 +72,6 @@ xr_reader* xr_file_system::r_open(const std::string& path)
 
 	//size_t file_size = static_cast<size_t>(lseek(fd, 0, SEEK_END));
 	auto file_size = static_cast<std::size_t>(sb.st_size);
-
-	xr_reader *reader = nullptr;
 
 	std::size_t mem_size;
 	auto page_size = static_cast<std::size_t>(sysconf(_SC_PAGESIZE));
@@ -103,7 +97,7 @@ xr_reader* xr_file_system::r_open(const std::string& path)
 		}
 	}
 
-	reader = new xr_mmap_reader_posix(fd, data, file_size, mem_size);
+	auto reader = new xr_mmap_reader_posix(fd, data, file_size, mem_size);
 
 	return reader ? reader : nullptr;
 }
@@ -114,21 +108,23 @@ xr_reader* xr_file_system::r_open(const std::string& path, const std::string& na
 	return pa ? r_open(pa->root + name) : nullptr;
 }
 
-void xr_file_system::r_close(xr_reader *&r) { delete r; r = nullptr; }
+void xr_file_system::r_close(xr_reader *&reader)
+{
+	delete reader;
+	reader = nullptr;
+}
 
 xr_writer* xr_file_system::w_open(const std::string& path, bool ignore_ro) const
 {
 	if(!ignore_ro && read_only())
 	{
-		spdlog::info("fs_ro: writing {}", path);
 		return new xr_fake_writer();
 	}
 
-	auto fd = ::open(path.c_str(), O_RDWR | O_CREAT, 0666);
+	auto fd = open(path.c_str(), O_RDWR | O_CREAT, 0666);
 
 	if (fd == -1)
 	{
-		spdlog::error("Failed to open file \"{}\": {} (errno={}) ", path, strerror(errno), errno);
 		return nullptr;
 	}
 
@@ -161,7 +157,6 @@ bool xr_file_system::copy_file(const std::string& src_path, const std::string& d
 {
 	if(read_only())
 	{
-		spdlog::info("fs_ro: copying {} to {}", src_path, dst_path);
 		return true;
 	}
 
@@ -172,12 +167,6 @@ size_t xr_file_system::file_length(const std::string& path)
 {
 	return std::filesystem::file_size(path);
 }
-
-//size_t xr_file_system::file_length(const std::string& path, const std::string& name) const
-//{
-//	const path_alias *pa = find_path_alias(path);
-//	return pa ? file_length(pa->root + name) : 0; // Check
-//}
 
 uint32_t xr_file_system::file_age(const std::string& path)
 {
@@ -190,39 +179,20 @@ uint32_t xr_file_system::file_age(const std::string& path)
 	return 0;
 }
 
-//uint32_t xr_file_system::file_age(const std::string& path, const std::string& name) const
-//{
-//	const path_alias *pa = find_path_alias(path);
-//	return pa ? file_age(pa->root + name) : 0;
-//}
-
 bool xr_file_system::file_exist(const std::string& path)
 {
 	return std::filesystem::exists(path) && std::filesystem::is_regular_file(path);
 }
-
-//bool xr_file_system::file_exist(const std::string& path, const std::string& name) const
-//{
-//	const path_alias *pa = find_path_alias(path);
-//	return pa ? file_exist(pa->root + name) : false;
-//}
 
 bool xr_file_system::folder_exist(const std::string& path)
 {
 	return std::filesystem::exists(path) && std::filesystem::is_directory(path);
 }
 
-//bool xr_file_system::folder_exist(const std::string& path, const std::string& name) const
-//{
-//	const path_alias *pa = find_path_alias(path);
-//	return pa ? folder_exist(pa->root + name) : false;
-//}
-
 bool xr_file_system::create_path(const std::string& path) const
 {
 	if(read_only())
 	{
-		spdlog::info("fs_ro: creating path {}", path);
 		return true;
 	}
 
@@ -238,7 +208,6 @@ bool xr_file_system::create_folder(const std::string& path) const
 {
 	if(read_only())
 	{
-		spdlog::info("fs_ro: creating folder {}", path);
 		return true;
 	}
 
@@ -249,21 +218,6 @@ bool xr_file_system::create_folder(const std::string& path) const
 
 	return std::filesystem::create_directory(path);
 }
-
-//bool xr_file_system::create_folder(const std::string& path, const std::string& name) const
-//{
-//	const path_alias *pa = find_path_alias(path);
-//	if (pa == nullptr)
-//		return false;
-
-//	if (read_only())
-//	{
-//		dbg("fs_ro: creating folder {}{}", pa->root, name);
-//		return true;
-//	}
-
-//	return create_folder(pa->root + name);
-//}
 
 const char* xr_file_system::resolve_path(const std::string& path) const
 {
@@ -290,7 +244,7 @@ void xr_file_system::update_path(const std::string& path, const std::string& roo
 	path_alias *new_pa;
 	for (auto it = m_aliases.begin(), end = m_aliases.end(); it != end; ++it)
 	{
-		if ((*it)->path == path)
+		if((*it)->path == path)
 		{
 			new_pa = *it;
 			goto found_or_created;
@@ -439,22 +393,21 @@ static inline const char* read_value(const char *&_p, const char *end)
 	return last_ws ? last_ws : p;
 }
 
-bool xr_file_system::parse_fs_spec(xr_reader& r)
+bool xr_file_system::parse_fs_spec(xr_reader& reader)
 {
-	const char *p = r.pointer<const char>();
-	const char *end = p + r.size();
+	const char *p = reader.pointer<const char>();
+	const char *end = p + reader.size();
 	std::string alias;
 	std::array<std::string, 4> values;
 	for (unsigned line = 1; p < end; p = next_line(p, end), ++line)
 	{
 		int c = *p;
 		if (c == '$')
-
 		{
 			const char *last = read_alias(p, end);
 			if (last == nullptr)
 			{
-				spdlog::error("can't parse line %u", line);
+				spdlog::error("can't parse line {}", line);
 				return false;
 			}
 			alias.assign(p, last);
@@ -462,7 +415,7 @@ bool xr_file_system::parse_fs_spec(xr_reader& r)
 			p = skip_ws(last, end);
 			if (p == end || *p++ != '=')
 			{
-				spdlog::error("can't parse line %u", line);
+				spdlog::error("can't parse line {}", line);
 				return false;
 			}
 
@@ -472,7 +425,7 @@ bool xr_file_system::parse_fs_spec(xr_reader& r)
 				last = read_value(p, end);
 				if (i < 0 && (last == end || *last != '|'))
 				{
-					spdlog::error("can't parse line %u", line);
+					spdlog::error("can't parse line {}", line);
 					return false;
 				}
 				if (i >= 0)
@@ -493,7 +446,7 @@ bool xr_file_system::parse_fs_spec(xr_reader& r)
 			path_alias *pa = add_path_alias(alias, values.at(0), values.at(1));
 			if (pa == nullptr)
 			{
-				spdlog::error("can't parse line %u", line);
+				spdlog::error("can't parse line {}", line);
 				return false;
 			}
 
@@ -504,7 +457,7 @@ bool xr_file_system::parse_fs_spec(xr_reader& r)
 		}
 		else if (c != ';' && !std::isspace(c))
 		{
-			spdlog::error("can't parse line %u", line);
+			spdlog::error("can't parse line {}", line);
 			return false;
 		}
 	}
@@ -581,7 +534,7 @@ void xr_file_writer_posix::w_raw(const void *data, size_t length)
 
 void xr_file_writer_posix::seek(size_t pos)
 {
-	auto res = lseek(m_fd, static_cast<off_t>(pos), SEEK_SET);
+	auto res = ::lseek64(m_fd, static_cast<off_t>(pos), SEEK_SET);
 
 	xr_assert(static_cast<size_t>(res) == pos);
 }

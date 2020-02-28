@@ -33,9 +33,11 @@ int main(int argc, char *argv[])
 {
 	try
 	{
-		options_description common_options("Common options", 82);
+		unsigned int line_lenght = 82;
+		options_description common_options("Common options", line_lenght);
 		common_options.add_options()
 		    ("help", "produce help message")
+		    ("debug", "enable debug output")
 		    ("ro", "perform all the steps but do not write anything on disk")
 		    ("out", value<std::string>()->value_name("<PATH>"), "output file or folder name")
 		    ("11xx", "assume 1114/1154 archive format (unpack only)")
@@ -61,6 +63,13 @@ int main(int argc, char *argv[])
 		variables_map vm;
 		store(parse_command_line(argc, argv, all_options), vm);
 		notify(vm);
+
+		bool debug = false;
+		if(vm.count("debug"))
+		{
+			debug = true;
+			spdlog::set_level(spdlog::level::debug);
+		}
 
 		if (vm.count("help"))
 		{
@@ -169,6 +178,7 @@ int main(int argc, char *argv[])
 				}
 
 				db_unpacker unpacker;
+				unpacker.set_debug(debug);
 				unpacker.process(source_path, destination_path, version, filter);
 				break;
 			}
@@ -201,6 +211,7 @@ int main(int argc, char *argv[])
 				}
 
 				db_packer packer;
+				packer.set_debug(debug);
 				packer.process(source_path, destination_path, version, xdb_ud);
 				break;
 			}
@@ -211,6 +222,10 @@ int main(int argc, char *argv[])
 				return 0;
 			}
 		}
+	}
+	catch(boost::program_options::unknown_option& e)
+	{
+		spdlog::error(e.what());
 	}
 	catch(std::exception& e)
 	{

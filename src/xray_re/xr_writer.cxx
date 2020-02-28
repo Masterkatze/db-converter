@@ -4,11 +4,15 @@
 #include "xr_writer.hxx"
 #include "xr_file_system.hxx"
 #include "xr_packet.hxx"
+#include "xr_utils.hxx"
+#include "spdlog/spdlog.h"
 
 using namespace xray_re;
 
 void xr_writer::open_chunk(uint32_t id)
 {
+	spdlog::debug("xr_writer::open_chunk chunk_id={} compressed={}", id & ~CHUNK_COMPRESSED, (id & CHUNK_COMPRESSED) != 0);
+
 	w_u32(id);
 	w_u32(0);
 	m_open_chunks.push(tell());
@@ -30,6 +34,8 @@ void xr_writer::close_chunk()
 
 void xr_writer::w_raw_chunk(uint32_t id, const void *data, size_t size)
 {
+	spdlog::debug("xr_writer::w_raw_chunk chunk_id={} compressed={}", id & ~CHUNK_COMPRESSED, (id & CHUNK_COMPRESSED) != 0);
+
 	w_u32(id);
 	w_size_u32(size);
 	w_raw(data, size);

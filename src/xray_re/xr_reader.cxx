@@ -3,10 +3,15 @@
 #include "xr_reader.hxx"
 #include "xr_lzhuf.hxx"
 #include "xr_packet.hxx"
+#include "spdlog/spdlog.h"
+#include "xr_utils.hxx"
+
+#include <fstream>
+#include <iostream>
 
 using namespace xray_re;
 
-const uint32_t CHUNK_ID_MASK = ~xr_reader::CHUNK_COMPRESSED;
+const uint32_t CHUNK_ID_MASK = ~CHUNK_COMPRESSED;
 
 xr_reader::xr_reader(): m_data(nullptr), m_p(nullptr), m_end(nullptr), m_next(nullptr) { }
 
@@ -29,6 +34,8 @@ size_t xr_reader::find_chunk(uint32_t find_id, bool& compressed, bool reset)
 		uint32_t id = r_u32();
 		size_t size = r_u32();
 		assert(m_p + size <= m_end);
+
+		spdlog::debug("xr_reader::find_chunk chunk_id={} compressed={}", id & ~CHUNK_COMPRESSED, (id & CHUNK_COMPRESSED) != 0);
 
 		if (find_id == (id & CHUNK_ID_MASK))
 		{
@@ -53,14 +60,26 @@ xr_reader* xr_reader::open_chunk(uint32_t id)
 {
 	bool compressed;
 	size_t size = find_chunk(id, compressed);
+
 	if (size == 0)
 		return nullptr;
+
+	spdlog::debug("xr_reader::open_chunk chunk_id={} compressed={}", id & ~CHUNK_COMPRESSED, (id & CHUNK_COMPRESSED) != 0);
 
 	if (compressed)
 	{
 		size_t real_size;
 		uint8_t* data;
 		xr_lzhuf::decompress(data, real_size, m_p, size);
+
+		if(id == 1)
+		{
+			std::ofstream test_file_header;
+			test_file_header.open("/home/orange/projects/stalker/test_data/cop/bin/header.bin", std::ios::binary);
+			test_file_header.write((const char*)data, real_size);
+			test_file_header.close();
+		}
+
 		return new xr_temp_reader(data, real_size);
 	}
 	else
@@ -92,6 +111,9 @@ xr_reader* xr_reader::open_chunk_next(uint32_t& _id, xr_reader *prev)
 		assert(m_p + size <= m_end);
 		m_next = m_p + size;
 		_id = id;
+
+		spdlog::debug("xr_reader::open_chunk_next chunk_id={} compressed={}", id & ~CHUNK_COMPRESSED, (id & CHUNK_COMPRESSED) != 0);
+
 		if (id & CHUNK_COMPRESSED)
 		{
 			size_t real_size;

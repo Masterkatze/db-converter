@@ -586,6 +586,7 @@ void _lzhuf::Decode(uint8_t *&_text, size_t& _textsize, const uint8_t *_code, si
 	size_t count;
 
 	m_dest_limit = textsize = *(uint32_t*)_code;
+	//m_dest_limit = textsize = static_cast<uint32_t>(*_code);
 	m_dest = static_cast<uint8_t*>(malloc(m_dest_limit));
 	m_dest_pos = 0;
 
