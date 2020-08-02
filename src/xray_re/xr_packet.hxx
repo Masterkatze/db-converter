@@ -1,8 +1,9 @@
 #pragma once
 
+#include "xr_types.hxx"
+
 #include <string>
 #include <vector>
-#include "xr_types.hxx"
 
 namespace xray_re
 {

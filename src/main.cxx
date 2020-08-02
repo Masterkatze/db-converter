@@ -1,8 +1,8 @@
 #include "db_tools.hxx"
 #include "xray_re/xr_file_system.hxx"
-#include "spdlog/spdlog.h"
+
 #include <boost/program_options.hpp>
-#include <iostream>
+#include <spdlog/spdlog.h>
 
 using namespace xray_re;
 using namespace boost::program_options;
@@ -73,10 +73,12 @@ int main(int argc, char *argv[])
 
 		if (vm.count("help"))
 		{
-			std::cout << "Usage examples:" << std::endl;
-			std::cout << "  db_converter --unpack resources.db0 --xdb --dir ~/extracted" << std::endl;
-			std::cout << "  db_converter --pack ~/dir_to_pack/ --out ~/packed.db --xdb" << std::endl;
-			std::cout << all_options << std::endl;
+			spdlog::info("Usage examples:");
+			spdlog::info("  db_converter --unpack resources.db0 --xdb --dir ~/extracted");
+			spdlog::info( "  db_converter --pack ~/dir_to_pack/ --out ~/packed.db --xdb");
+			std::stringstream all_options_string;
+			all_options_string << all_options;
+			spdlog::info(all_options_string.str());
 
 			return 1;
 		}
@@ -94,10 +96,14 @@ int main(int argc, char *argv[])
 		unsigned short int tools_type = db_tools::TOOLS_AUTO;
 
 		if (vm.count("unpack"))
+		{
 			tools_type = db_tools::TOOLS_DB_UNPACK;
+		}
 
 		if (vm.count("pack"))
+		{
 			tools_type = db_tools::TOOLS_DB_PACK;
+		}
 
 		std::string fs_spec;
 

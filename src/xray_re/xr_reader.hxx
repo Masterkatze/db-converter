@@ -1,9 +1,10 @@
 #pragma once
 
+#include "xr_types.hxx"
+
 #include <string>
 #include <vector>
 #include <functional>
-#include "xr_types.hxx"
 
 namespace xray_re
 {
@@ -15,7 +16,7 @@ namespace xray_re
 	public:
 		xr_reader();
 		xr_reader(const void *data, size_t length);
-		virtual ~xr_reader();
+		virtual ~xr_reader() = default;
 
 		size_t find_chunk(uint32_t id, bool& compressed, bool reset = true);
 		size_t find_chunk(uint32_t id);
@@ -61,22 +62,6 @@ namespace xray_re
 		bool r_bool();
 		float r_float();
 		void r_packet(xr_packet& packet, size_t size);
-
-		template<typename T> struct f_r: public std::binary_function<T, xr_reader, void> {};
-
-		struct f_r_sz: public f_r<std::string>
-		{
-			void operator()(std::string& s, xr_reader& r) { r.r_sz(s); }
-		};
-
-		template<typename T> struct f_r_new: public f_r<T>
-		{
-			explicit f_r_new(void (T::*_pmf)(xr_reader& r)): pmf(_pmf) {}
-			void operator()(T*& p, xr_reader& r) { T* _p = new T; (_p->*pmf)(r); p = _p; }
-
-		private:
-			void (T::*pmf)(xr_reader& r);
-		};
 
 	protected:
 		const uint8_t *m_data;

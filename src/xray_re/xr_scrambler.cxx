@@ -1,6 +1,7 @@
+#include "xr_scrambler.hxx"
+
 #include <utility>
 #include <numeric>
-#include "xr_scrambler.hxx"
 
 using namespace xray_re;
 
@@ -16,12 +17,12 @@ const int SIZE_MULT_WW = 4;
 
 void xr_scrambler::init(cipher_config cc)
 {
-	if (cc == CC_RU)
+	if(cc == CC_RU)
 	{
 		m_seed = SEED_RU;
 		init_sboxes(SEED0_RU, SIZE_MULT_RU);
 	}
-	else if (cc == CC_WW)
+	else if(cc == CC_WW)
 	{
 		m_seed = SEED_WW;
 		init_sboxes(SEED0_WW, SIZE_MULT_WW);
@@ -48,7 +49,9 @@ void xr_scrambler::init_sboxes(int seed, std::size_t size_mult)
 	}
 
 	for (std::size_t i = 0; i < SBOX_SIZE; ++i)
+	{
 		m_dec_sbox.at(m_enc_sbox.at(i)) = uint8_t(i);
+	}
 }
 
 void xr_scrambler::decrypt(uint8_t *dest, const uint8_t *src, size_t size) const

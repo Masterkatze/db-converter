@@ -1,5 +1,8 @@
 #include "xr_file_system.hxx"
 #include "xr_utils.hxx"
+
+#include <spdlog/spdlog.h>
+
 #include <filesystem>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -8,8 +11,6 @@
 #include <fcntl.h>
 #include <cerrno>
 #include <cstring>
-//#include <iostream>
-#include "spdlog/spdlog.h"
 
 using namespace xray_re;
 
@@ -30,13 +31,13 @@ bool xr_file_system::read_only() const { return !!(m_flags & FSF_READ_ONLY); }
 
 bool xr_file_system::initialize(const std::string& fs_spec, unsigned flags)
 {
-	if (!fs_spec.empty() && fs_spec[0] != '\0')
+	if(!fs_spec.empty() && fs_spec[0] != '\0')
 	{
 		xr_reader *reader = r_open(fs_spec);
-		if (reader == nullptr)
+		if(reader == nullptr)
 			return false;
 
-		if (parse_fs_spec(*reader))
+		if(parse_fs_spec(*reader))
 		{
 			auto path_splitted = xr_file_system::split_path(fs_spec);
 
@@ -57,20 +58,19 @@ bool xr_file_system::initialize(const std::string& fs_spec, unsigned flags)
 xr_reader* xr_file_system::r_open(const std::string& path)
 {
 	auto fd = ::open(path.c_str(), O_RDONLY);
-	if (fd == -1)
+	if(fd == -1)
 	{
 		spdlog::error("Failed to open file \"{}\": {} (errno={}) ", path, strerror(errno), errno);
 		return nullptr;
 	}
 
 	struct stat sb {};
-	if (fstat(fd, &sb) == -1)
+	if(fstat(fd, &sb) == -1)
 	{
 		spdlog::error("stat failed for file \"{}\": {} (errno={}) ", path, strerror(errno), errno);
 		return nullptr;
 	}
 
-	//size_t file_size = static_cast<size_t>(lseek(fd, 0, SEEK_END));
 	auto file_size = static_cast<std::size_t>(sb.st_size);
 
 	std::size_t mem_size;
@@ -123,7 +123,7 @@ xr_writer* xr_file_system::w_open(const std::string& path, bool ignore_ro) const
 
 	auto fd = open(path.c_str(), O_RDWR | O_CREAT, 0666);
 
-	if (fd == -1)
+	if(fd == -1)
 	{
 		return nullptr;
 	}
@@ -143,11 +143,11 @@ void xr_file_system::w_close(xr_writer *&w) { delete w; w = nullptr; }
 bool xr_file_system::copy_file(const std::string &src_path, const std::string &src_name, const std::string &tgt_path, const std::string &tgt_name) const
 {
 	const path_alias *src_pa = find_path_alias(src_path);
-	if (src_pa == nullptr)
+	if(src_pa == nullptr)
 		return false;
 
 	const path_alias *tgt_pa = find_path_alias(tgt_path);
-	if (tgt_pa == nullptr)
+	if(tgt_pa == nullptr)
 		return false;
 
 	return copy_file(src_pa->root + src_name, tgt_pa->root + (tgt_name.empty() ? src_name : tgt_name));
@@ -228,12 +228,12 @@ const char* xr_file_system::resolve_path(const std::string& path) const
 bool xr_file_system::resolve_path(const std::string& path, const std::string& name, std::string& full_path) const
 {
 	const path_alias *pa = find_path_alias(path);
-	if (pa == nullptr)
+	if(pa == nullptr)
 		return false;
 
 	full_path = pa->root;
 
-	if (name.empty())
+	if(name.empty())
 		full_path.append(name);
 
 	return true;
@@ -242,7 +242,7 @@ bool xr_file_system::resolve_path(const std::string& path, const std::string& na
 void xr_file_system::update_path(const std::string& path, const std::string& root, const std::string& add)
 {
 	path_alias *new_pa;
-	for (auto it = m_aliases.begin(), end = m_aliases.end(); it != end; ++it)
+	for(auto it = m_aliases.begin(), end = m_aliases.end(); it != end; ++it)
 	{
 		if((*it)->path == path)
 		{
@@ -256,7 +256,7 @@ void xr_file_system::update_path(const std::string& path, const std::string& roo
 
 found_or_created:
 	const path_alias *pa = find_path_alias(root);
-	if (pa)
+	if(pa)
 	{
 		new_pa->root = pa->root;
 	}
@@ -271,7 +271,7 @@ found_or_created:
 
 void xr_file_system::append_path_separator(std::string& path)
 {
-	if (!path.empty() && *(path.end() - 1) != '/')
+	if(!path.empty() && *(path.end() - 1) != '/')
 		path += '/';
 }
 
@@ -284,9 +284,9 @@ split_path_t xr_file_system::split_path(const std::string& path)
 
 const xr_file_system::path_alias* xr_file_system::find_path_alias(const std::string& path) const
 {
-	for (auto it = m_aliases.begin(), end = m_aliases.end(); it != end; ++it)
+	for(auto it = m_aliases.begin(), end = m_aliases.end(); it != end; ++it)
 	{
-		if ((*it)->path == path)
+		if((*it)->path == path)
 			return *it;
 	}
 
@@ -299,7 +299,7 @@ xr_file_system::path_alias* xr_file_system::add_path_alias(const std::string& pa
 
 	assert(pa == nullptr);
 
-	if (pa != nullptr)
+	if(pa != nullptr)
 		return nullptr;
 
 	auto new_pa = new path_alias;
@@ -307,7 +307,7 @@ xr_file_system::path_alias* xr_file_system::add_path_alias(const std::string& pa
 	new_pa->path = path;
 
 	pa = find_path_alias(root);
-	if (pa)
+	if(pa)
 	{
 		new_pa->root = pa->root;
 	}
@@ -330,19 +330,19 @@ static inline const char* next_line(const char *p, const char *end)
 
 static inline const char* read_alias(const char *p, const char *end)
 {
-	if (p >= end || *p++ != '$')
+	if(p >= end || *p++ != '$')
 		return nullptr;
 
-	if (p >= end || (!std::isalnum(*p) && *p != '_'))
+	if(p >= end || (!std::isalnum(*p) && *p != '_'))
 		return nullptr;
 
-	for (++p; p < end;)
+	for(++p; p < end;)
 	{
 		int c = *p;
-		if (c == '$')
+		if(c == '$')
 			return p + 1;
 
-		if (!std::isalnum(c) && c != '_')
+		if(!std::isalnum(c) && c != '_')
 			break;
 
 		++p;
@@ -356,7 +356,7 @@ static inline const char* skip_ws(const char *p, const char *end)
 	{
 		int c = *p;
 
-		if (c != ' ' && c != '\t')
+		if(c != ' ' && c != '\t')
 			break;
 
 		++p;
@@ -372,14 +372,14 @@ static inline const char* read_value(const char *&_p, const char *end)
 	while (p < end)
 	{
 		int c = *p;
-		if (c == ' ' || c =='\t')
+		if(c == ' ' || c =='\t')
 		{
-			if (last_ws == nullptr)
+			if(last_ws == nullptr)
 				last_ws = p;
 		}
-		else if (c == '\n' || c == '\r' || c == '|')
+		else if(c == '\n' || c == '\r' || c == '|')
 		{
-			if (last_ws == nullptr)
+			if(last_ws == nullptr)
 				last_ws = p;
 
 			break;
@@ -399,13 +399,13 @@ bool xr_file_system::parse_fs_spec(xr_reader& reader)
 	const char *end = p + reader.size();
 	std::string alias;
 	std::array<std::string, 4> values;
-	for (unsigned line = 1; p < end; p = next_line(p, end), ++line)
+	for(unsigned line = 1; p < end; p = next_line(p, end), ++line)
 	{
 		int c = *p;
-		if (c == '$')
+		if(c == '$')
 		{
 			const char *last = read_alias(p, end);
-			if (last == nullptr)
+			if(last == nullptr)
 			{
 				spdlog::error("can't parse line {}", line);
 				return false;
@@ -413,49 +413,49 @@ bool xr_file_system::parse_fs_spec(xr_reader& reader)
 			alias.assign(p, last);
 
 			p = skip_ws(last, end);
-			if (p == end || *p++ != '=')
+			if(p == end || *p++ != '=')
 			{
 				spdlog::error("can't parse line {}", line);
 				return false;
 			}
 
 			int i;
-			for (i = -2; i < 4;)
+			for(i = -2; i < 4;)
 			{
 				last = read_value(p, end);
-				if (i < 0 && (last == end || *last != '|'))
+				if(i < 0 && (last == end || *last != '|'))
 				{
 					spdlog::error("can't parse line {}", line);
 					return false;
 				}
-				if (i >= 0)
+				if(i >= 0)
 					values.at(static_cast<std::size_t>(i)).assign(p, last);
 
 				p = last + 1;
 				++i;
 
-				if (p == end || *last != '|')
+				if(p == end || *last != '|')
 					break;
 			}
 
 			assert(i > 0);
 
-			if (i < 2)
+			if(i < 2)
 				values.at(1).clear();
 
 			path_alias *pa = add_path_alias(alias, values.at(0), values.at(1));
-			if (pa == nullptr)
+			if(pa == nullptr)
 			{
 				spdlog::error("can't parse line {}", line);
 				return false;
 			}
 
-			if (i > 2)
+			if(i > 2)
 				pa->filter = values.at(2);
-			if (i > 3)
+			if(i > 3)
 				pa->caption = values.at(3);
 		}
-		else if (c != ';' && !std::isspace(c))
+		else if(c != ';' && !std::isspace(c))
 		{
 			spdlog::error("can't parse line {}", line);
 			return false;
@@ -477,7 +477,7 @@ xr_mmap_reader_posix::~xr_mmap_reader_posix()
 	if(m_mem_length != 0)
 	{
 		auto res = madvise(reinterpret_cast<void*>(const_cast<uint8_t*>(m_data)), m_mem_length, MADV_DONTNEED | MADV_FREE);
-		if (res == -1)
+		if(res == -1)
 		{
 			spdlog::error("madvise failed: {} (errno={}) ", strerror(errno), errno);
 		}
@@ -490,13 +490,13 @@ xr_mmap_reader_posix::~xr_mmap_reader_posix()
 	}
 
 	int res = posix_fadvise(m_fd, 0, static_cast<off_t>(m_file_length), POSIX_FADV_DONTNEED); //POSIX_FADV_NOREUSE
-	if (res != 0)
+	if(res != 0)
 	{
 		spdlog::error("posix_fadvise failed: {} (errno={}) ", strerror(errno), errno);
 	}
 
 	res = ::close(m_fd);
-	if (res == -1)
+	if(res == -1)
 	{
 		spdlog::error("Failed to close file descriptor {}: {} (errno={}) ", m_fd, strerror(errno), errno);
 	}
@@ -511,7 +511,7 @@ xr_file_writer_posix::~xr_file_writer_posix()
 	assert(m_fd != -1);
 
 	auto res = ::close(m_fd);
-	if (res == -1)
+	if(res == -1)
 	{
 		spdlog::error("Failed to close file descriptor {}: {} (errno={}) ", m_fd, strerror(errno), errno);
 	}
@@ -523,7 +523,7 @@ void xr_file_writer_posix::w_raw(const void *data, size_t length)
 
 	if(length != 0 && data != MAP_FAILED)
 	{
-		if (res == -1)
+		if(res == -1)
 		{
 			spdlog::error("Failed to write to descriptor {}: {} (errno={}) ", m_fd, strerror(errno), errno);
 		}
@@ -542,7 +542,7 @@ void xr_file_writer_posix::seek(size_t pos)
 size_t xr_file_writer_posix::tell()
 {
 	auto res = ::lseek64(m_fd, 0, SEEK_CUR);
-	if (res == -1)
+	if(res == -1)
 	{
 		spdlog::error("Failed to close file descriptor {}: {} (errno={}) ", m_fd, strerror(errno), errno);
 	}

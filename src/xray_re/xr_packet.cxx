@@ -1,5 +1,6 @@
-#include <cstring>
 #include "xr_packet.hxx"
+
+#include <cstring>
 
 using namespace xray_re;
 
@@ -36,11 +37,13 @@ const char* xr_packet::skip_sz()
 	auto p = reinterpret_cast<const char*>(m_buf + m_r_pos);
 	while (m_r_pos < sizeof(m_buf))
 	{
-		if (m_buf[m_r_pos++] == 0)
+		if(m_buf[m_r_pos++] == 0)
+		{
 			return p;
+		}
 	}
 
-	// crash in debug mode if no 0 in the packet
+	// Crash in debug mode if no 0 in the packet
 	xr_assert(m_r_pos < sizeof(m_buf));
 	return p;
 }
@@ -50,13 +53,13 @@ void xr_packet::r_sz(std::string& value)
 	auto p = &m_buf[m_r_pos];
 	while (m_r_pos < sizeof(m_buf))
 	{
-		if (m_buf[m_r_pos++] == 0)
+		if(m_buf[m_r_pos++] == 0)
 		{
 			value.assign(p, &m_buf[m_r_pos - 1]);
 			return;
 		}
 	}
-	// crash in debug mode if no 0 in the packet
+	// Crash in debug mode if no 0 in the packet
 	assert(m_r_pos < sizeof(m_buf));
 	value.assign(p, m_buf + m_r_pos);
 }

@@ -1,10 +1,11 @@
 #pragma once
 
+#include "xr_types.hxx"
+
 #include <string>
 #include <vector>
 #include <stack>
 #include <functional>
-#include "xr_types.hxx"
 
 namespace xray_re
 {

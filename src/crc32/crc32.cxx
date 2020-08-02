@@ -95,7 +95,7 @@ unsigned int crc32(const void *buf, size_t size)
 	unsigned int crc = ~0U;
 	auto p = static_cast<const unsigned char*>(buf);
 
-	while (size--)
+	while(size--)
 	{
 		crc = crc32_tab.at((crc ^ *p++) & 0xFF) ^ (crc >> 8);
 	}

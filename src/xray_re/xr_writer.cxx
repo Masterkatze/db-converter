@@ -1,11 +1,13 @@
-#include <string>
-#include <cstring>
-#include <cstdarg>
 #include "xr_writer.hxx"
 #include "xr_file_system.hxx"
 #include "xr_packet.hxx"
 #include "xr_utils.hxx"
-#include "spdlog/spdlog.h"
+
+#include <spdlog/spdlog.h>
+
+#include <string>
+#include <cstring>
+#include <cstdarg>
 
 using namespace xray_re;
 
@@ -46,7 +48,7 @@ void xr_writer::w_sz(const std::string& value)
 	// do not write extra '\0'
 	//	size_t length = value.length() + 1;
 	//	const char *c_str = value.c_str();
-	//	if (len > 0 && c_str[len] == '\0')
+	//	if(len > 0 && c_str[len] == '\0')
 	w_raw(value.data(), value.length() + 1);
 }
 
@@ -66,22 +68,6 @@ void xr_writer::w_s(const std::string& value)
 {
 	w_raw(value.data(), value.length());
 	w_raw("\r\n", 2);
-}
-
-__attribute__((__format__ (__printf__, 2, 0)))
-void xr_writer::w_sf(const char *format, ...)
-{
-	char buf[256];
-	va_list ap;
-	va_start(ap, format);
-#if defined(_MSC_VER) && _MSC_VER >= 1400
-	int n = vsprintf_s(buf, sizeof(buf), format, ap);
-#else
-	int n = vsnprintf(buf, sizeof(buf), format, ap);
-#endif
-	va_end(ap);
-	if (n > 0)
-		w_raw(buf, static_cast<size_t>(n));
 }
 
 void xr_writer::w_float_q16(float value, float min, float max)
@@ -105,10 +91,12 @@ xr_memory_writer::~xr_memory_writer() = default;
 
 void xr_memory_writer::w_raw(const void *data, size_t size)
 {
-	if (size)
+	if(size)
 	{
-		if (m_pos + size > m_buffer.size())
+		if(m_pos + size > m_buffer.size())
+		{
 			m_buffer.resize(m_pos + size);
+		}
 
 		std::memmove(&m_buffer[m_pos], data, size);
 		m_pos += size;
@@ -130,8 +118,10 @@ bool xr_memory_writer::save_to(const char *path, const std::string& name)
 {
 	xr_file_system& fs = xr_file_system::instance();
 	xr_writer *w = fs.w_open(path, name);
-	if (w == nullptr)
+	if(w == nullptr)
+	{
 		return false;
+	}
 	w->w_raw(&m_buffer[0], m_buffer.size());
 	fs.w_close(w);
 	return true;
@@ -141,8 +131,10 @@ bool xr_memory_writer::save_to(const char *path)
 {
 	xr_file_system& fs = xr_file_system::instance();
 	xr_writer *w = fs.w_open(path);
-	if (w == nullptr)
+	if(w == nullptr)
+	{
 		return false;
+	}
 	w->w_raw(&m_buffer[0], m_buffer.size());
 	fs.w_close(w);
 	return true;
@@ -162,8 +154,10 @@ void xr_fake_writer::w_raw(const void *data, size_t size)
     #pragma unused(data)
 
 	m_pos += size;
-	if (m_size < m_pos)
+	if(m_size < m_pos)
+	{
 		m_size = m_pos;
+	}
 }
 
 void xr_fake_writer::seek(size_t pos)

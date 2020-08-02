@@ -1,7 +1,9 @@
 #pragma once
 
-#include <cstddef>
 #include "xr_types.hxx"
+
+#include <cstddef>
+#include <array>
 
 namespace xray_re
 {
@@ -25,20 +27,21 @@ namespace xray_re
 		};
 
 		unsigned char text_buf[N + F - 1];
-		int match_position, match_length, lson[N + 1], rson[N + 257], dad[N + 1];
+		int match_position, lson[N + 1], rson[N + 257], dad[N + 1];
+		uint32_t match_length;
 		unsigned int freq[T + 1];
 		int prnt[T + N_CHAR];
 		int son[T];
 
-		size_t textsize;
+		uint32_t textsize;
 		uint8_t *m_dest;
-		size_t m_dest_pos;
-		size_t m_dest_limit;
+		uint32_t m_dest_pos;
+		uint32_t m_dest_limit;
 
-		size_t codesize;
+		uint32_t codesize;
 		const uint8_t *m_src;
-		size_t m_src_pos;
-		size_t m_src_limit;
+		uint32_t m_src_pos;
+		uint32_t m_src_limit;
 
 		unsigned int getbuf;
 		unsigned char getlen;
@@ -46,10 +49,10 @@ namespace xray_re
 		unsigned int putbuf;
 		unsigned char putlen;
 
-		static const uint8_t p_len[64];
-		static const uint8_t p_code[64];
-		static const uint8_t d_code[256];
-		static const uint8_t d_len[256];
+		static const std::array<uint8_t, 64> p_len;
+		static const std::array<uint8_t, 64> p_code;
+		static const std::array<uint8_t, 256> d_code;
+		static const std::array<uint8_t, 256> d_len;
 
 		void InitTree();
 		void InsertNode(int r);
@@ -75,8 +78,8 @@ namespace xray_re
 		_lzhuf();
 		~_lzhuf();
 
-		void Encode(uint8_t *&_code, size_t& _codesize, const uint8_t *_text, size_t _textsize);
-		void Decode(uint8_t *&_text, size_t& _textsize, const uint8_t *_code, size_t _codesize);
+		void Encode(uint8_t *&_code, uint32_t& _codesize, const uint8_t *_text, uint32_t _textsize);
+		void Decode(uint8_t *&_text, uint32_t& _textsize, const uint8_t *_code, uint32_t _codesize);
 	};
 
 	class xr_lzhuf
@@ -91,20 +94,20 @@ namespace xray_re
 		xr_lzhuf& operator=(const xr_lzhuf& right);
 
 	public:
-		static void	compress(uint8_t *&_code, size_t& _codesize, const uint8_t *_text, size_t _textsize);
-		static void	decompress(uint8_t *&_text, size_t& _textsize, const uint8_t *_code, size_t _codesize);
+		static void	compress(uint8_t *&_code, uint32_t& _codesize, const uint8_t *_text, uint32_t _textsize);
+		static void	decompress(uint8_t *&_text, uint32_t& _textsize, const uint8_t *_code, uint32_t _codesize);
 	};
 
 	inline _lzhuf::_lzhuf() {}
 	inline _lzhuf::~_lzhuf() {}
 	inline xr_lzhuf::xr_lzhuf() {}
 
-	inline void xr_lzhuf::compress(uint8_t *&_code, size_t& _codesize, const uint8_t *_text, size_t _textsize)
+	inline void xr_lzhuf::compress(uint8_t *&_code, uint32_t& _codesize, const uint8_t *_text, uint32_t _textsize)
 	{
 		instance()->m_lzhuf.Encode(_code, _codesize, _text, _textsize);
 	}
 
-	inline void xr_lzhuf::decompress(uint8_t *&_text, size_t& _textsize, const uint8_t *_code, size_t _codesize)
+	inline void xr_lzhuf::decompress(uint8_t *&_text, uint32_t& _textsize, const uint8_t *_code, uint32_t _codesize)
 	{
 		instance()->m_lzhuf.Decode(_text, _textsize, _code, _codesize);
 	}

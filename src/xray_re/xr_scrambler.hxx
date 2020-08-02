@@ -1,6 +1,7 @@
 #pragma once
 
 #include "xr_types.hxx"
+
 #include <array>
 
 namespace xray_re
