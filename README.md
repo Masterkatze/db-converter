@@ -4,8 +4,15 @@ Based on bardak's converter from xray_re-tools.
 
 Supported operating systems: Linux x86_64
 
-Tested: CoP unpacking  
-Not tested: everything else :)
+| File format         | 1114               | 2215               | 2945               | 2947RU             | 2947WW             | XDB                |
+| :------------------ | :----------------: | :----------------: | :----------------: | :----------------: | :----------------: | :----------------: |
+| Unpacking           | :grey_question:    | :grey_question:    | :grey_question:    | :grey_question:    | :grey_question:    | :heavy_check_mark: |
+| Packing             | :grey_question:    | :grey_question:    | :grey_question:    | :grey_question:    | :grey_question:    | :heavy_check_mark: |
+| Archive splittng    | :grey_question:    | :grey_question:    | :grey_question:    | :grey_question:    | :grey_question:    | :grey_question:    |
+
+| Game                     | SoC                | CS                 | CoP                |
+| :----------------------- | :----------------: | :----------------: | :----------------: |
+| Repacked archive working | :grey_question:    | :grey_question:    | :grey_question:    |
 
 
 ## Build

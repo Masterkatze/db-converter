@@ -65,7 +65,7 @@ static bool write_file(xr_file_system& fs, const std::string& path, const void *
 	return false;
 }
 
-void db_unpacker::process(std::string& source_path, std::string& destination_path, db_version& version, std::string& filter)
+void db_unpacker::process(const std::string& source_path, const std::string& destination_path, const db_version& version, const std::string& filter)
 {
 	if(version == DB_VERSION_AUTO)
 	{
@@ -225,98 +225,103 @@ static bool write_file(xr_file_system& fs, const std::string& path, const uint8_
 	}
 
 	if(size_real != size_compressed)
+	{
 		delete[] data;
+	}
 
 	return true;
 }
 
-void db_unpacker::extract_1114(const std::string& prefix, const std::string& mask, xr_reader *s, const uint8_t *data)
+void db_unpacker::extract_1114(const std::string& prefix, const std::string& mask, xr_reader *reader, const uint8_t *data)
 {
 	xr_file_system& fs = xr_file_system::instance();
-	for (std::string temp, path, folder; !s->eof(); )
+	while(!reader->eof())
 	{
-		s->r_sz(temp);
-		std::replace(path.begin(), path.end(), '\\', '/');
+		std::string name;
+		reader->r_sz(name);
 
-		unsigned uncompressed = s->r_u32();
-		unsigned offset = s->r_u32();
-		unsigned size = s->r_u32();
+		unsigned uncompressed = reader->r_u32();
+		unsigned offset = reader->r_u32();
+		unsigned size = reader->r_u32();
+
+		std::replace(name.begin(), name.end(), '\\', '/');
+		std::string path = prefix + name;
 
 		if(mask.length() > 0 && offset != 0 && path.find(mask) == std::string::npos)
 		{
 			continue;
 		}
 
-		if(m_debug && fs.read_only())
-		{
-			spdlog::debug("{}", temp);
-			spdlog::debug("  offset: {}", offset);
+		spdlog::debug("{}", path);
+		spdlog::debug("  offset: {}", offset);
 
-			if(uncompressed)
-			{
-				spdlog::debug("  size (real): {}", size);
-			}
-			else
-			{
-				spdlog::debug("  size (compressed): {}", size);
-			}
+		if(uncompressed)
+		{
+			spdlog::debug("  size (real): {}", size);
 		}
 		else
 		{
-			path = prefix;
-			auto path_splitted = xr_file_system::split_path(path.append(temp));
+			spdlog::debug("  size (compressed): {}", size);
+		}
 
-			std::string folder = path_splitted.folder;
+		if(fs.read_only())
+		{
+			continue;
+		}
 
-			if(!xr_file_system::folder_exist(folder))
-				fs.create_path(folder);
+		auto path_splitted = xr_file_system::split_path(path.append(name));
+		std::string folder = path_splitted.folder;
+		fs.create_path(folder);
 
-			if(uncompressed)
+		if(uncompressed)
+		{
+			write_file(fs, path, data + offset, size);
+		}
+		else
+		{
+			uint32_t real_size;
+			uint8_t *p;
+			xr_lzhuf::decompress(p, real_size, data + offset, size);
+
+			if(real_size)
 			{
-				write_file(fs, path, data + offset, size);
+				write_file(fs, path, p, real_size);
 			}
-			else
-			{
-				uint32_t real_size;
-				uint8_t *p;
-				xr_lzhuf::decompress(p, real_size, data + offset, size);
 
-				if(real_size)
-				{
-					write_file(fs, path, p, real_size);
-				}
-
-				free(p);
-			}
+			free(p);
 		}
 	}
 }
 
-void db_unpacker::extract_2215(const std::string& prefix, const std::string& mask, xr_reader *s, const uint8_t *data)
+void db_unpacker::extract_2215(const std::string& prefix, const std::string& mask, xr_reader *reader, const uint8_t *data)
 {
 	xr_file_system& fs = xr_file_system::instance();
-	for (std::string path; !s->eof(); )
+	while(!reader->eof())
 	{
-		s->r_sz(path);
+		std::string path;
+		reader->r_sz(path);
 		std::replace(path.begin(), path.end(), '\\', '/');
 
-		unsigned offset = s->r_u32();
-		unsigned size_real = s->r_u32();
-		unsigned size_compressed = s->r_u32();
+		unsigned offset = reader->r_u32();
+		unsigned size_real = reader->r_u32();
+		unsigned size_compressed = reader->r_u32();
 
 		if(mask.length() > 0 && offset != 0 && path.find(mask) == std::string::npos)
 		{
 			continue;
 		}
 
-		if(m_debug && fs.read_only())
+		spdlog::debug("{}", path);
+		spdlog::debug("  offset: {}", offset);
+		spdlog::debug("  size (real): {}", size_real);
+		spdlog::debug("  size (compressed): {}", size_compressed);
+
+		if(fs.read_only())
 		{
-			spdlog::debug("{}", path);
-			spdlog::debug("  offset: {}", offset);
-			spdlog::debug("  size (real): {}", size_real);
-			spdlog::debug("  size (compressed): {}", size_compressed);
+			continue;
 		}
-		else if(offset == 0)
+
+		if(offset == 0)
 		{
 			fs.create_folder(prefix + path);
 		}
@@ -327,33 +332,37 @@ void db_unpacker::extract_2215(const std::string& prefix, const std::string& mas
 	}
 }
 
-void db_unpacker::extract_2945(const std::string& prefix, const std::string& mask, xr_reader *s, const uint8_t *data)
+void db_unpacker::extract_2945(const std::string& prefix, const std::string& mask, xr_reader *reader, const uint8_t *data)
 {
 	xr_file_system& fs = xr_file_system::instance();
-	for (std::string path; !s->eof(); )
+	while(!reader->eof())
 	{
-		s->r_sz(path);
+		std::string path;
+		reader->r_sz(path);
 		std::replace(path.begin(), path.end(), '\\', '/');
 
-		unsigned crc = s->r_u32();
-		unsigned offset = s->r_u32();
-		unsigned size_real = s->r_u32();
-		unsigned size_compressed = s->r_u32();
+		unsigned crc = reader->r_u32();
+		unsigned offset = reader->r_u32();
+		unsigned size_real = reader->r_u32();
+		unsigned size_compressed = reader->r_u32();
 
 		if(mask.length() > 0 && offset != 0 && path.find(mask) == std::string::npos)
 		{
 			continue;
 		}
 
-		if(m_debug && fs.read_only())
+		spdlog::debug("{}", path);
+		spdlog::debug("  crc: {0:#x}", crc);
+		spdlog::debug("  offset: {}", offset);
+		spdlog::debug("  size (real): {}", size_real);
+		spdlog::debug("  size (compressed): {}", size_compressed);
+
+		if(fs.read_only())
 		{
-			spdlog::debug("{}", path);
-			spdlog::debug("  crc: {0:#x}", crc);
-			spdlog::debug("  offset: {}", offset);
-			spdlog::debug("  size (real): {}", size_real);
-			spdlog::debug("  size (compressed): {}", size_compressed);
+			continue;
 		}
-		else if(offset == 0)
+
+		if(offset == 0)
 		{
 			fs.create_folder(prefix + path);
 		}
@@ -367,7 +376,7 @@ void db_unpacker::extract_2945(const std::string& prefix, const std::string& mas
 void db_unpacker::extract_2947(const std::string& prefix, const std::string& mask, xr_reader *reader, const uint8_t *data)
 {
 	xr_file_system& fs = xr_file_system::instance();
-	while (!reader->eof())
+	while(!reader->eof())
 	{
 		unsigned int name_size = reader->r_u16() - 16;              // unsigned 2 bytes <─┐
 		unsigned int size_real = reader->r_u32();                   // unsigned 4 bytes   │
@@ -384,22 +393,24 @@ void db_unpacker::extract_2947(const std::string& prefix, const std::string& mas
 			continue;
 		}
 
-		if(m_debug && fs.read_only())
+		spdlog::debug("{}", name);
+		spdlog::debug("  offset: {}", offset);
+
+		if(size_real != size_compressed)
 		{
-			spdlog::debug("{}", name);
-			spdlog::debug("  offset: {}", offset);
+			spdlog::debug("  size (real): {}", size_real);
+			spdlog::debug("  size (compressed): {}", size_compressed);
+		}
+		else
+		{
+			spdlog::debug("  size: {}", size_real);
+		}
 
-			if(size_real != size_compressed)
-			{
-				spdlog::debug("  size (real): {}", size_real);
-				spdlog::debug("  size (compressed): {}", size_compressed);
-			}
-			else
-			{
-				spdlog::debug("  size: {}", size_real);
-			}
+		spdlog::debug("  crc: {0:#x}", crc);
 
-			spdlog::debug("  crc: {0:#x}", crc);
+		if(fs.read_only())
+		{
+			continue;
 		}
 
 		if(offset == 0)
@@ -421,7 +432,7 @@ db_packer::~db_packer()
 	delete_elements(m_files);
 }
 
-void db_packer::process(std::string& source_path, std::string& destination_path, db_version& version, std::string& xdb_ud)
+void db_packer::process(const std::string& source_path, const std::string& destination_path, const db_version& version, const std::string& xdb_ud)
 {
 	if(source_path.empty())
 	{
@@ -482,9 +493,9 @@ void db_packer::process(std::string& source_path, std::string& destination_path,
 	}
 
 	m_archive->open_chunk(DB_CHUNK_DATA);
-	xr_file_system::append_path_separator(source_path);
 	m_root = source_path;
-	process_folder(source_path);
+	xr_file_system::append_path_separator(m_root);
+	process_folder(m_root);
 	m_archive->close_chunk();
 
 	auto w = new xr_memory_writer;

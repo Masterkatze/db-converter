@@ -1,5 +1,3 @@
-set(CMAKE_CXX_STANDARD 17)
-
 find_package(Boost COMPONENTS program_options REQUIRED )
 include_directories(${Boost_INCLUDE_DIR})
 
@@ -31,8 +29,9 @@ add_library(db_tools SHARED
 	"xray_re/xr_packet.cxx"
     "xray_re/xr_packet.hxx")
 
+target_link_libraries(db_tools PUBLIC ${Boost_LIBRARIES} spdlog::spdlog)
+
 add_executable(${PROJECT_NAME}
 	"main.cxx")
 
-target_link_libraries(${PROJECT_NAME} PRIVATE ${Boost_LIBRARIES} db_tools spdlog::spdlog)
-target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_17)
+target_link_libraries(${PROJECT_NAME} PUBLIC db_tools)
