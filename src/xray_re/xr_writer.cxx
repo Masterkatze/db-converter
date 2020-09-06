@@ -22,11 +22,11 @@ void xr_writer::open_chunk(uint32_t id)
 
 void xr_writer::close_chunk()
 {
-	xr_assert(!m_open_chunks.empty());
+	assert(!m_open_chunks.empty());
 
 	size_t pos = tell();
 	size_t chunk_pos = m_open_chunks.top();
-	xr_assert(chunk_pos <= pos);
+	assert(chunk_pos <= pos);
 
 	seek(chunk_pos - 4);
 	w_size_u32(pos - chunk_pos);
@@ -54,7 +54,7 @@ void xr_writer::w_sz(const std::string& value)
 
 void xr_writer::w_sz(const char *value)
 {
-	xr_assert(value);
+	assert(value);
 	w_raw(value, std::strlen(value) + 1);
 }
 
@@ -70,16 +70,6 @@ void xr_writer::w_s(const std::string& value)
 	w_raw("\r\n", 2);
 }
 
-void xr_writer::w_float_q16(float value, float min, float max)
-{
-	w_u16(uint16_t((value - min)*65535.f/(max - min)));
-}
-
-void xr_writer::w_float_q8(float value, float min, float max)
-{
-	w_u8(uint8_t((value - min)*255.f/(max - min)));
-}
-
 void xr_writer::w_packet(const xr_packet& packet)
 {
 	w_raw(packet.buf(), packet.w_tell());
@@ -91,21 +81,23 @@ xr_memory_writer::~xr_memory_writer() = default;
 
 void xr_memory_writer::w_raw(const void *data, size_t size)
 {
-	if(size)
+	if(!size)
 	{
-		if(m_pos + size > m_buffer.size())
-		{
-			m_buffer.resize(m_pos + size);
-		}
-
-		std::memmove(&m_buffer[m_pos], data, size);
-		m_pos += size;
+		return;
 	}
+
+	if(m_pos + size > m_buffer.size())
+	{
+		m_buffer.resize(m_pos + size);
+	}
+
+	std::memmove(&m_buffer[m_pos], data, size);
+	m_pos += size;
 }
 
 void xr_memory_writer::seek(size_t pos)
 {
-	xr_assert(pos <= m_buffer.size());
+	assert(pos <= m_buffer.size());
 	m_pos = pos;
 }
 
@@ -114,7 +106,7 @@ size_t xr_memory_writer::tell()
 	return m_pos;
 }
 
-bool xr_memory_writer::save_to(const char *path, const std::string& name)
+bool xr_memory_writer::save_to(const std::string& path, const std::string& name)
 {
 	xr_file_system& fs = xr_file_system::instance();
 	xr_writer *w = fs.w_open(path, name);
@@ -122,19 +114,7 @@ bool xr_memory_writer::save_to(const char *path, const std::string& name)
 	{
 		return false;
 	}
-	w->w_raw(&m_buffer[0], m_buffer.size());
-	fs.w_close(w);
-	return true;
-}
 
-bool xr_memory_writer::save_to(const char *path)
-{
-	xr_file_system& fs = xr_file_system::instance();
-	xr_writer *w = fs.w_open(path);
-	if(w == nullptr)
-	{
-		return false;
-	}
 	w->w_raw(&m_buffer[0], m_buffer.size());
 	fs.w_close(w);
 	return true;
@@ -142,17 +122,24 @@ bool xr_memory_writer::save_to(const char *path)
 
 bool xr_memory_writer::save_to(const std::string& path)
 {
-	return save_to(path.c_str());
+	xr_file_system& fs = xr_file_system::instance();
+	xr_writer *w = fs.w_open(path);
+	if(w == nullptr)
+	{
+		return false;
+	}
+
+	w->w_raw(&m_buffer[0], m_buffer.size());
+	fs.w_close(w);
+	return true;
 }
 
 xr_fake_writer::xr_fake_writer(): m_pos(0), m_size(0) {}
 
 xr_fake_writer::~xr_fake_writer() = default;
 
-void xr_fake_writer::w_raw(const void *data, size_t size)
+void xr_fake_writer::w_raw(const void *, size_t size)
 {
-    #pragma unused(data)
-
 	m_pos += size;
 	if(m_size < m_pos)
 	{

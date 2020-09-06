@@ -33,10 +33,10 @@ void xr_scrambler::init_sboxes(int seed, std::size_t size_mult)
 {
 	std::iota(m_enc_sbox.begin(), m_enc_sbox.end(), 0);
 
-	for (std::size_t a, b, i = size_mult*SBOX_SIZE; i > 0; --i)
+	for (std::size_t b, i = size_mult*SBOX_SIZE; i > 0; --i)
 	{
 		seed = 1 + seed * SEED_MULT;
-		a = (seed >> 24) & 0xff;
+		std::size_t a = (seed >> 24) & 0xff;
 
 		do
 		{

@@ -23,8 +23,8 @@ xr_file_system::~xr_file_system()
 
 xr_file_system& xr_file_system::instance()
 {
-	static xr_file_system instance0;
-	return instance0;
+	static xr_file_system instance;
+	return instance;
 }
 
 bool xr_file_system::read_only() const { return !!(m_flags & FSF_READ_ONLY); }
@@ -170,7 +170,7 @@ size_t xr_file_system::file_length(const std::string& path)
 
 uint32_t xr_file_system::file_age(const std::string& path)
 {
-	struct stat st {};
+	struct stat st{};
 	if(stat(path.c_str(), &st) == 0)
 	{
 		return static_cast<uint32_t>(st.st_mtime);
@@ -271,7 +271,7 @@ found_or_created:
 
 void xr_file_system::append_path_separator(std::string& path)
 {
-	if(!path.empty() && *(path.end() - 1) != '/')
+	if(!path.empty() && path.back() != '/')
 		path += '/';
 }
 
@@ -528,7 +528,7 @@ void xr_file_writer_posix::w_raw(const void *data, size_t length)
 			spdlog::error("Failed to write to descriptor {}: {} (errno={}) ", m_fd, strerror(errno), errno);
 		}
 
-		xr_assert(static_cast<size_t>(res) == length);
+		assert(static_cast<size_t>(res) == length);
 	}
 }
 
@@ -536,7 +536,7 @@ void xr_file_writer_posix::seek(size_t pos)
 {
 	auto res = ::lseek64(m_fd, static_cast<off_t>(pos), SEEK_SET);
 
-	xr_assert(static_cast<size_t>(res) == pos);
+	assert(static_cast<size_t>(res) == pos);
 }
 
 size_t xr_file_writer_posix::tell()

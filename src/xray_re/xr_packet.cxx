@@ -8,7 +8,7 @@ xr_packet::xr_packet(): m_buf{}, m_w_pos(0), m_r_pos(0) { }
 
 void xr_packet::r_raw(void *data, size_t size)
 {
-	xr_assert(m_r_pos + size <= sizeof(m_buf));
+	assert(m_r_pos + size <= sizeof(m_buf));
 	std::memmove(data, m_buf + m_r_pos, size);
 	m_r_pos += size;
 }
@@ -44,7 +44,7 @@ const char* xr_packet::skip_sz()
 	}
 
 	// Crash in debug mode if no 0 in the packet
-	xr_assert(m_r_pos < sizeof(m_buf));
+	assert(m_r_pos < sizeof(m_buf));
 	return p;
 }
 
@@ -77,7 +77,7 @@ void xr_packet::w_sz(const std::string& value)
 
 void xr_packet::init(const uint8_t *data, size_t size)
 {
-	xr_assert(size < sizeof(m_buf));
+	assert(size < sizeof(m_buf));
 	m_r_pos = 0;
 	m_w_pos = size;
 	std::memmove(m_buf, data, size);

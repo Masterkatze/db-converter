@@ -43,7 +43,7 @@ std::size_t GetNumberOfFilesAndDirectories(const std::string &path)
 	return std::distance(recursive_directory_iterator(path), recursive_directory_iterator{});
 }
 
-void CompareChecksums(const std::string& game, unsigned int crc32, unsigned int number_of_files) {
+void CompareChecksums(const std::string& game, db_tools::db_version version, unsigned int crc32, unsigned int number_of_files) {
 	std::string file_name = "mp_pool.db";
 	std::string folder_path = "/home/orange/dev/db_converter_data/";
 	std::string original_file_path = folder_path + game + "/original/" + file_name;
@@ -64,14 +64,14 @@ void CompareChecksums(const std::string& game, unsigned int crc32, unsigned int 
 	{
 		db_unpacker unpacker;
 		unpacker.set_debug(true);
-		unpacker.process(original_file_path, unpack_path, db_tools::db_version::DB_VERSION_XDB, filter);
+		unpacker.process(original_file_path, unpack_path, version, filter);
 
 		EXPECT_EQ(GetNumberOfFilesAndDirectories(unpack_path), number_of_files);
 	}
 	{
 		db_packer packer;
 		packer.set_debug(true);
-		packer.process(unpack_path, packed_file_path, db_tools::db_version::DB_VERSION_XDB, userdata_file_path);
+		packer.process(unpack_path, packed_file_path, version, userdata_file_path);
 
 		auto checksum = GetChecksum(packed_file_path);
 		ASSERT_TRUE(checksum.has_value());
@@ -83,10 +83,10 @@ void CompareChecksums(const std::string& game, unsigned int crc32, unsigned int 
 
 TEST(Compare, ClearSkyChecksums)
 {
-	CompareChecksums("cs", 1778816644, 15);
+	CompareChecksums("cs", db_tools::db_version::DB_VERSION_XDB, 1778816644, 15);
 }
 
 TEST(Compare, CallOfPripyatChecksums)
 {
-	CompareChecksums("cop", 2187792425, 16);
+	CompareChecksums("cop", db_tools::db_version::DB_VERSION_XDB, 2187792425, 16);
 }

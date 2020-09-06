@@ -168,14 +168,14 @@ const char* xr_reader::skip_sz()
 	}
 
 	// always crash if no '\0' in the chunk
-	xr_assert(m_p < m_end);
+	assert(m_p < m_end);
 	return reinterpret_cast<const char*>(p);
 }
 
 void xr_reader::r_s(std::string& value)
 {
 	const uint8_t* p = m_p;
-	xr_assert(p < m_end);
+	assert(p < m_end);
 	while (p != m_end && *p != '\n' && *p != '\r')
 	{
 		++p;
@@ -193,7 +193,7 @@ void xr_reader::r_s(std::string& value)
 void xr_reader::r_sz(std::string& value)
 {
 	const uint8_t* p = m_p;
-	xr_assert(p < m_end);
+	assert(p < m_end);
 	while (*p++)
 	{
 		// FIXME: we should crash in debug mode if no '\0' in the chunk,
@@ -214,7 +214,7 @@ void xr_reader::r_sz(std::string& value)
 void xr_reader::r_sz(char *dest, size_t dest_size)
 {
 	const uint8_t* p = m_p;
-	xr_assert(p < m_end && dest_size > 0);
+	assert(p < m_end && dest_size > 0);
 	const uint8_t* end = p + dest_size;
 
 	if(end > m_end)

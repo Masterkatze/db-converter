@@ -69,7 +69,7 @@ void db_unpacker::process(const std::string& source_path, const std::string& des
 {
 	if(version == DB_VERSION_AUTO)
 	{
-		spdlog::error("unspecified DB format");
+		spdlog::error("Unspecified DB format");
 		return;
 	}
 
@@ -136,7 +136,7 @@ void db_unpacker::process(const std::string& source_path, const std::string& des
 			}
 			default:
 			{
-				spdlog::error("unknown DB format");
+				spdlog::error("Unknown DB format");
 				return;
 			}
 		}
@@ -170,7 +170,7 @@ void db_unpacker::process(const std::string& source_path, const std::string& des
 				}
 				default:
 				{
-					spdlog::error("unknown DB format");
+					spdlog::error("Unknown DB format");
 					return;
 				}
 			}
@@ -179,7 +179,7 @@ void db_unpacker::process(const std::string& source_path, const std::string& des
 	}
 	else
 	{
-		spdlog::error("can't create {}", output_folder);
+		spdlog::error("Failed to create {}", output_folder);
 	}
 	fs.r_close(reader_full);
 }
@@ -448,7 +448,7 @@ void db_packer::process(const std::string& source_path, const std::string& desti
 
 	if(!xr_file_system::folder_exist(source_path))
 	{
-		spdlog::error("can't find {}", source_path);
+		spdlog::error("Failed to find folder {}", source_path);
 		return;
 	}
 
@@ -473,7 +473,7 @@ void db_packer::process(const std::string& source_path, const std::string& desti
 	m_archive = fs.w_open(destination_path);
 	if(m_archive == nullptr)
 	{
-		spdlog::error("Can't load {}", destination_path);
+		spdlog::error("Failed to load {}", destination_path);
 		return;
 	}
 
@@ -488,7 +488,7 @@ void db_packer::process(const std::string& source_path, const std::string& desti
 		}
 		else
 		{
-			spdlog::error("can't load {}", xdb_ud);
+			spdlog::error("Failed to load {}", xdb_ud);
 		}
 	}
 
@@ -551,10 +551,7 @@ void db_packer::process(const std::string& source_path, const std::string& desti
 
 void db_packer::process_folder(const std::string& path)
 {
-	auto root_path = std::filesystem::path(path);
-
-	std::vector<std::filesystem::directory_entry> folders;
-	std::vector<std::filesystem::directory_entry> files;
+	std::vector<std::filesystem::directory_entry> files, folders;
 
 	for (auto& entry : std::filesystem::recursive_directory_iterator(path))
 	{
@@ -568,10 +565,14 @@ void db_packer::process_folder(const std::string& path)
 		}
 	}
 
-	std::sort(folders.begin(), folders.end(), [] (std::filesystem::directory_entry lhs, std::filesystem::directory_entry rhs)
+	auto comparator = [](auto lhs, auto rhs)
 	{
 		return lhs.path() < rhs.path();
-	});
+	};
+
+	std::sort(folders.begin(), folders.end(), comparator);
+
+	auto root_path = std::filesystem::path(path);
 
 	for(auto folder : folders)
 	{
@@ -580,10 +581,7 @@ void db_packer::process_folder(const std::string& path)
 		m_folders.push_back(relative_path);
 	}
 
-	std::sort(files.begin(), files.end(), [] (std::filesystem::directory_entry lhs, std::filesystem::directory_entry rhs)
-	{
-		return lhs.path() < rhs.path();
-	});
+	std::sort(files.begin(), files.end(), comparator);
 
 	for(auto file : files)
 	{

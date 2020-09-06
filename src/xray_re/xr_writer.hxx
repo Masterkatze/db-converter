@@ -29,8 +29,6 @@ namespace xray_re
 		template<typename T> void w_chunk(uint32_t id, const T& value);
 		template<typename T, typename F> void w_chunks(const T& container, F write);
 		template<typename T, typename F> void w_seq(const T& container, F write);
-		template<typename T> void w_seq(const T& container);
-		template<typename T> void w_cseq(size_t n, const T values[]);
 		template<typename T, typename F> void w_cseq(size_t n, const T values[], F write);
 		template<typename T> void w(const T& value);
 
@@ -46,10 +44,6 @@ namespace xray_re
 		void w_s16(int16_t value);
 		void w_u8(uint8_t value);
 		void w_s8(int8_t value);
-		void w_bool(bool value);
-		void w_float(float value);
-		void w_float_q16(float value, float min = 0, float max = 1.f);
-		void w_float_q8(float value, float min = 0, float max = 1.f);
 		void w_size_u32(size_t value);
 		void w_size_u16(size_t value);
 		void w_size_u8(size_t value);
@@ -98,9 +92,8 @@ namespace xray_re
 
 		const uint8_t* data() const;
 
-		bool save_to(const char *path);
 		bool save_to(const std::string& path);
-		bool save_to(const char *path, const std::string& name);
+		bool save_to(const std::string& path, const std::string& name);
 
 	private:
 		std::vector<uint8_t> m_buffer;
@@ -117,28 +110,14 @@ namespace xray_re
 	inline void xr_writer::w_s16(int16_t value) { w<int16_t>(value); }
 	inline void xr_writer::w_u8(uint8_t value) { w<uint8_t>(value); }
 	inline void xr_writer::w_s8(int8_t value) { w<int8_t>(value); }
-	inline void xr_writer::w_bool(bool value) { w_u8(value ? 1 : 0); }
-	inline void xr_writer::w_float(float value) { w<float>(value); }
 	inline void xr_writer::w_size_u32(size_t value) { w_u32(static_cast<uint32_t>(value & UINT32_MAX)); }
 	inline void xr_writer::w_size_u16(size_t value) { w_u16(static_cast<uint16_t>(value & UINT16_MAX)); }
 	inline void xr_writer::w_size_u8(size_t value) { w_u8(static_cast<uint8_t>(value & UINT8_MAX)); }
-
-	template<typename T> inline void xr_writer::w_cseq(size_t n, const T values[])
-	{
-		if (n)
-			w_raw(values, n*sizeof(T));
-	}
 
 	template<typename T, typename F> inline void xr_writer::w_cseq(size_t n, const T values[], F write)
 	{
 		for (const T *p = values, *end = p + n; p != end; ++p)
 			write(*p, *this);
-	}
-
-	template<typename T> inline void xr_writer::w_seq(const T& container)
-	{
-		if (!container.empty())
-			w_raw(&container[0], container.size()*sizeof(typename T::value_type));
 	}
 
 	template<typename T, typename F> inline void xr_writer::w_seq(const T& container, F write)
