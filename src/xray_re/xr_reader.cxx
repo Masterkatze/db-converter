@@ -14,7 +14,7 @@ using namespace xray_re;
 
 const uint32_t CHUNK_ID_MASK = ~CHUNK_COMPRESSED;
 
-xr_reader::xr_reader(): m_data(nullptr), m_p(nullptr), m_end(nullptr), m_next(nullptr) { }
+xr_reader::xr_reader() : m_data(nullptr), m_p(nullptr), m_end(nullptr), m_next(nullptr) { }
 
 xr_reader::xr_reader(const void *data, size_t length)
 {
@@ -22,43 +22,43 @@ xr_reader::xr_reader(const void *data, size_t length)
 	m_end = static_cast<const uint8_t*>(data) + length;
 }
 
-size_t xr_reader::find_chunk(uint32_t find_id, bool& compressed, bool reset)
+size_t xr_reader::find_chunk(uint32_t id, bool& compressed, bool reset)
 {
 	if(reset)
 	{
 		m_p = m_data;
 	}
 
-	while (m_p < m_end)
+	while(m_p < m_end)
 	{
 		assert(m_p + 8 <= m_end);
-		uint32_t id = r_u32();
-		size_t size = r_u32();
-		assert(m_p + size <= m_end);
+		auto chunk_id = r_u32();
+		auto chunk_size = r_u32();
+		assert(m_p + chunk_size <= m_end);
 
-		spdlog::debug("xr_reader::find_chunk chunk_id={} compressed={}", id & ~CHUNK_COMPRESSED, (id & CHUNK_COMPRESSED) != 0);
+		spdlog::debug("xr_reader::find_chunk chunk_id={} compressed={}", chunk_id & ~CHUNK_COMPRESSED, (chunk_id & CHUNK_COMPRESSED) != 0);
 
-		if(find_id == (id & CHUNK_ID_MASK))
+		if(id == (chunk_id & CHUNK_ID_MASK))
 		{
-			//xr_assert((id & CHUNK_COMPRESSED) == 0);
-			compressed = (id & CHUNK_COMPRESSED) != 0;
-			return size;
+			//xr_assert((chunk_id & CHUNK_COMPRESSED) == 0);
+			compressed = (chunk_id & CHUNK_COMPRESSED) != 0;
+			return chunk_size;
 		}
-		m_p += size;
+		m_p += chunk_size;
 	}
 	return 0;
 }
 
-size_t xr_reader::find_chunk(uint32_t find_id)
+size_t xr_reader::find_chunk(uint32_t id)
 {
 	bool compressed;
-	return find_chunk(find_id, compressed);
+	return find_chunk(id, compressed);
 }
 
 xr_reader* xr_reader::open_chunk(uint32_t id)
 {
 	bool compressed;
-	size_t size = find_chunk(id, compressed);
+	auto size = find_chunk(id, compressed);
 
 	if(size == 0)
 	{
@@ -96,7 +96,7 @@ void xr_reader::close_chunk(xr_reader *&r) const
 	r = nullptr;
 }
 
-xr_reader* xr_reader::open_chunk_next(uint32_t& _id, xr_reader *prev)
+xr_reader* xr_reader::open_chunk_next(uint32_t& id, xr_reader *prev)
 {
 	if(prev)
 	{
@@ -111,24 +111,24 @@ xr_reader* xr_reader::open_chunk_next(uint32_t& _id, xr_reader *prev)
 	{
 		assert(m_next + 8 <= m_end);
 		m_p = m_next;
-		uint32_t id = r_u32();
-		uint32_t size = r_u32();
-		assert(m_p + size <= m_end);
-		m_next = m_p + size;
-		_id = id;
+		auto chunk_id = r_u32();
+		auto chunk_size = r_u32();
+		assert(m_p + chunk_size <= m_end);
+		m_next = m_p + chunk_size;
+		id = chunk_id;
 
-		spdlog::debug("xr_reader::open_chunk_next chunk_id={} compressed={}", id & ~CHUNK_COMPRESSED, (id & CHUNK_COMPRESSED) != 0);
+		spdlog::debug("xr_reader::open_chunk_next chunk_id={} compressed={}", chunk_id & ~CHUNK_COMPRESSED, (chunk_id & CHUNK_COMPRESSED) != 0);
 
-		if(id & CHUNK_COMPRESSED)
+		if(chunk_id & CHUNK_COMPRESSED)
 		{
 			uint32_t real_size;
 			uint8_t* data;
-			xr_lzhuf::decompress(data, real_size, m_p, size);
+			xr_lzhuf::decompress(data, real_size, m_p, chunk_size);
 			return new xr_temp_reader(data, real_size);
 		}
 		else
 		{
-			return new xr_reader(m_p, size);
+			return new xr_reader(m_p, chunk_size);
 		}
 	}
 	return nullptr;
@@ -137,7 +137,7 @@ xr_reader* xr_reader::open_chunk_next(uint32_t& _id, xr_reader *prev)
 size_t xr_reader::r_raw_chunk(uint32_t id, void *dest, size_t dest_size)
 {
 	bool compressed;
-	size_t size = find_chunk(id, compressed);
+	auto size = find_chunk(id, compressed);
 	if(size == 0)
 	{
 		return 0;
@@ -158,8 +158,8 @@ void xr_reader::r_raw(void *dest, size_t dest_size)
 
 const char* xr_reader::skip_sz()
 {
-	const uint8_t* p = m_p;
-	while (m_p < m_end)
+	auto p = m_p;
+	while(m_p < m_end)
 	{
 		if(*m_p++ == 0)
 		{
@@ -174,15 +174,15 @@ const char* xr_reader::skip_sz()
 
 void xr_reader::r_s(std::string& value)
 {
-	const uint8_t* p = m_p;
+	auto p = m_p;
 	assert(p < m_end);
-	while (p != m_end && *p != '\n' && *p != '\r')
+	while(p != m_end && *p != '\n' && *p != '\r')
 	{
 		++p;
 	}
 
 	value.assign(m_p, p);
-	while (p != m_end && (*p == '\n' || *p == '\r'))
+	while(p != m_end && (*p == '\n' || *p == '\r'))
 	{
 		++p;
 	}
@@ -192,9 +192,9 @@ void xr_reader::r_s(std::string& value)
 
 void xr_reader::r_sz(std::string& value)
 {
-	const uint8_t* p = m_p;
+	auto p = m_p;
 	assert(p < m_end);
-	while (*p++)
+	while(*p++)
 	{
 		// FIXME: we should crash in debug mode if no '\0' in the chunk,
 		// but that is not good for older models (from 2215).
@@ -213,16 +213,16 @@ void xr_reader::r_sz(std::string& value)
 
 void xr_reader::r_sz(char *dest, size_t dest_size)
 {
-	const uint8_t* p = m_p;
+	auto p = m_p;
 	assert(p < m_end && dest_size > 0);
-	const uint8_t* end = p + dest_size;
+	auto end = p + dest_size;
 
 	if(end > m_end)
 	{
 		end = m_end;
 	}
 
-	while (*p++)
+	while(*p++)
 	{
 		// crash in debug mode if we don't fit in buffer or chunk
 		assert(p < end);

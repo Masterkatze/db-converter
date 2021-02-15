@@ -33,7 +33,7 @@ void xr_scrambler::init_sboxes(int seed, std::size_t size_mult)
 {
 	std::iota(m_enc_sbox.begin(), m_enc_sbox.end(), 0);
 
-	for (std::size_t b, i = size_mult*SBOX_SIZE; i > 0; --i)
+	for(std::size_t b, i = size_mult*SBOX_SIZE; i > 0; --i)
 	{
 		seed = 1 + seed * SEED_MULT;
 		std::size_t a = (seed >> 24) & 0xff;
@@ -43,12 +43,12 @@ void xr_scrambler::init_sboxes(int seed, std::size_t size_mult)
 			seed = 1 + seed * SEED_MULT;
 			b = (seed >> 24) & 0xff;
 		}
-		while (a == b);
+		while(a == b);
 
 		std::swap(m_enc_sbox.at(a), m_enc_sbox.at(b));
 	}
 
-	for (std::size_t i = 0; i < SBOX_SIZE; ++i)
+	for(std::size_t i = 0; i < SBOX_SIZE; ++i)
 	{
 		m_dec_sbox.at(m_enc_sbox.at(i)) = uint8_t(i);
 	}
@@ -56,8 +56,8 @@ void xr_scrambler::init_sboxes(int seed, std::size_t size_mult)
 
 void xr_scrambler::decrypt(uint8_t *dest, const uint8_t *src, size_t size) const
 {
-	int seed = m_seed;
-	for (size_t i = 0; i != size; ++i)
+	auto seed = m_seed;
+	for(size_t i = 0; i != size; ++i)
 	{
 		seed = 1 + seed * SEED_MULT;
 		dest[i] = m_dec_sbox.at(src[i] ^ ((seed >> 24) & 0xff));
@@ -66,8 +66,8 @@ void xr_scrambler::decrypt(uint8_t *dest, const uint8_t *src, size_t size) const
 
 void xr_scrambler::encrypt(uint8_t *dest, const uint8_t *src, size_t size) const
 {
-	int seed = m_seed;
-	for (size_t i = 0; i != size; ++i)
+	auto seed = m_seed;
+	for(size_t i = 0; i != size; ++i)
 	{
 		seed = 1 + seed * SEED_MULT;
 		dest[i] = uint8_t(m_enc_sbox.at(src[i]) ^ ((seed >> 24) & 0xff));

@@ -94,8 +94,8 @@ namespace xray_re
 		xr_lzhuf& operator=(const xr_lzhuf& right);
 
 	public:
-		static void	compress(uint8_t *&_code, uint32_t& _codesize, const uint8_t *_text, uint32_t _textsize);
-		static void	decompress(uint8_t *&_text, uint32_t& _textsize, const uint8_t *_code, uint32_t _codesize);
+		static void compress(uint8_t *&_code, uint32_t& _codesize, const uint8_t *_text, uint32_t _textsize);
+		static void decompress(uint8_t *&_text, uint32_t& _textsize, const uint8_t *_code, uint32_t _codesize);
 	};
 
 	inline _lzhuf::_lzhuf() {}

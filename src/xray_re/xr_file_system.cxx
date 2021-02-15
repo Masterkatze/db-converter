@@ -14,7 +14,7 @@
 
 using namespace xray_re;
 
-xr_file_system::xr_file_system(): m_flags(0) {}
+xr_file_system::xr_file_system() : m_flags(0) {}
 
 xr_file_system::~xr_file_system()
 {
@@ -33,16 +33,16 @@ bool xr_file_system::initialize(const std::string& fs_spec, unsigned flags)
 {
 	if(!fs_spec.empty() && fs_spec[0] != '\0')
 	{
-		xr_reader *reader = r_open(fs_spec);
+		auto reader = r_open(fs_spec);
 		if(reader == nullptr)
+		{
 			return false;
+		}
 
 		if(parse_fs_spec(*reader))
 		{
 			auto path_splitted = xr_file_system::split_path(fs_spec);
-
 			std::string folder = path_splitted.folder;
-
 			add_path_alias(PA_FS_ROOT, folder, "");
 		}
 		r_close(reader);
@@ -51,6 +51,7 @@ bool xr_file_system::initialize(const std::string& fs_spec, unsigned flags)
 	{
 		add_path_alias(PA_FS_ROOT, "", "");
 	}
+
 	m_flags = flags;
 	return !m_aliases.empty();
 }
@@ -86,7 +87,7 @@ xr_reader* xr_file_system::r_open(const std::string& path)
 		mem_size = file_size + page_size - remainder;
 	}
 
-	void *data = mmap(nullptr, mem_size, PROT_READ, MAP_PRIVATE, fd, 0);
+	auto data = mmap(nullptr, mem_size, PROT_READ, MAP_PRIVATE, fd, 0);
 
 	if(file_size != 0)
 	{
@@ -104,7 +105,7 @@ xr_reader* xr_file_system::r_open(const std::string& path)
 
 xr_reader* xr_file_system::r_open(const std::string& path, const std::string& name) const
 {
-	const path_alias *pa = find_path_alias(path);
+	auto pa = find_path_alias(path);
 	return pa ? r_open(pa->root + name) : nullptr;
 }
 
@@ -134,21 +135,29 @@ xr_writer* xr_file_system::w_open(const std::string& path, bool ignore_ro) const
 
 xr_writer* xr_file_system::w_open(const std::string& path, const std::string& name,  bool ignore_ro) const
 {
-	const path_alias *pa = find_path_alias(path);
+	auto pa = find_path_alias(path);
 	return pa ? w_open(pa->root + name, ignore_ro) : nullptr;
 }
 
-void xr_file_system::w_close(xr_writer *&w) { delete w; w = nullptr; }
-
-bool xr_file_system::copy_file(const std::string &src_path, const std::string &src_name, const std::string &tgt_path, const std::string &tgt_name) const
+void xr_file_system::w_close(xr_writer *&writer)
 {
-	const path_alias *src_pa = find_path_alias(src_path);
-	if(src_pa == nullptr)
-		return false;
+	delete writer;
+	writer = nullptr;
+}
 
-	const path_alias *tgt_pa = find_path_alias(tgt_path);
-	if(tgt_pa == nullptr)
+bool xr_file_system::copy_file(const std::string &src_path, const std::string &src_name, const std::string &dst_path, const std::string &tgt_name) const
+{
+	auto src_pa = find_path_alias(src_path);
+	if(src_pa == nullptr)
+	{
 		return false;
+	}
+
+	auto tgt_pa = find_path_alias(dst_path);
+	if(tgt_pa == nullptr)
+	{
+		return false;
+	}
 
 	return copy_file(src_pa->root + src_name, tgt_pa->root + (tgt_name.empty() ? src_name : tgt_name));
 }
@@ -221,20 +230,24 @@ bool xr_file_system::create_folder(const std::string& path) const
 
 const char* xr_file_system::resolve_path(const std::string& path) const
 {
-	const path_alias *pa = find_path_alias(path);
+	auto pa = find_path_alias(path);
 	return pa != nullptr ? pa->root.c_str() : nullptr;
 }
 
 bool xr_file_system::resolve_path(const std::string& path, const std::string& name, std::string& full_path) const
 {
-	const path_alias *pa = find_path_alias(path);
+	auto pa = find_path_alias(path);
 	if(pa == nullptr)
+	{
 		return false;
+	}
 
 	full_path = pa->root;
 
 	if(name.empty())
+	{
 		full_path.append(name);
+	}
 
 	return true;
 }
@@ -255,7 +268,7 @@ void xr_file_system::update_path(const std::string& path, const std::string& roo
 	m_aliases.push_back(new_pa);
 
 found_or_created:
-	const path_alias *pa = find_path_alias(root);
+	auto pa = find_path_alias(root);
 	if(pa)
 	{
 		new_pa->root = pa->root;
@@ -272,7 +285,9 @@ found_or_created:
 void xr_file_system::append_path_separator(std::string& path)
 {
 	if(!path.empty() && path.back() != '/')
+	{
 		path += '/';
+	}
 }
 
 split_path_t xr_file_system::split_path(const std::string& path)
@@ -284,10 +299,16 @@ split_path_t xr_file_system::split_path(const std::string& path)
 
 const xr_file_system::path_alias* xr_file_system::find_path_alias(const std::string& path) const
 {
-	for(auto it = m_aliases.begin(), end = m_aliases.end(); it != end; ++it)
+//	return *std::find_if(m_aliases.begin(), m_aliases.end(), [&path](xr_file_system::path_alias* alias) {
+//		return alias->path == path;
+//	});
+
+	for(auto alias : m_aliases)
 	{
-		if((*it)->path == path)
-			return *it;
+		if(alias->path == path)
+		{
+			return alias;
+		}
 	}
 
 	return nullptr;
@@ -295,12 +316,14 @@ const xr_file_system::path_alias* xr_file_system::find_path_alias(const std::str
 
 xr_file_system::path_alias* xr_file_system::add_path_alias(const std::string& path, const std::string& root, const std::string& add)
 {
-	const path_alias *pa = find_path_alias(path);
+	auto pa = find_path_alias(path);
 
 	assert(pa == nullptr);
 
 	if(pa != nullptr)
+	{
 		return nullptr;
+	}
 
 	auto new_pa = new path_alias;
 	m_aliases.push_back(new_pa);
@@ -324,26 +347,37 @@ xr_file_system::path_alias* xr_file_system::add_path_alias(const std::string& pa
 
 static inline const char* next_line(const char *p, const char *end)
 {
-	while (p < end && *p++ != '\n') {}
+	while(p < end && *p != '\n')
+	{
+		p++;
+	}
 	return p;
 }
 
 static inline const char* read_alias(const char *p, const char *end)
 {
 	if(p >= end || *p++ != '$')
+	{
 		return nullptr;
+	}
 
 	if(p >= end || (!std::isalnum(*p) && *p != '_'))
+	{
 		return nullptr;
+	}
 
 	for(++p; p < end;)
 	{
 		int c = *p;
 		if(c == '$')
+		{
 			return p + 1;
+		}
 
 		if(!std::isalnum(c) && c != '_')
+		{
 			break;
+		}
 
 		++p;
 	}
@@ -352,12 +386,14 @@ static inline const char* read_alias(const char *p, const char *end)
 
 static inline const char* skip_ws(const char *p, const char *end)
 {
-	while (p < end)
+	while(p < end)
 	{
 		int c = *p;
 
 		if(c != ' ' && c != '\t')
+		{
 			break;
+		}
 
 		++p;
 	}
@@ -366,21 +402,25 @@ static inline const char* skip_ws(const char *p, const char *end)
 
 static inline const char* read_value(const char *&_p, const char *end)
 {
-	const char *p = skip_ws(_p, end);
+	auto p = skip_ws(_p, end);
 	_p = p;
-	const char *last_ws = nullptr;
-	while (p < end)
+	decltype(p) last_ws = nullptr;
+	while(p < end)
 	{
 		int c = *p;
 		if(c == ' ' || c =='\t')
 		{
 			if(last_ws == nullptr)
+			{
 				last_ws = p;
+			}
 		}
 		else if(c == '\n' || c == '\r' || c == '|')
 		{
 			if(last_ws == nullptr)
+			{
 				last_ws = p;
+			}
 
 			break;
 		}
@@ -395,8 +435,8 @@ static inline const char* read_value(const char *&_p, const char *end)
 
 bool xr_file_system::parse_fs_spec(xr_reader& reader)
 {
-	const char *p = reader.pointer<const char>();
-	const char *end = p + reader.size();
+	auto p = reader.pointer<const char>();
+	auto end = p + reader.size();
 	std::string alias;
 	std::array<std::string, 4> values;
 	for(unsigned line = 1; p < end; p = next_line(p, end), ++line)
@@ -404,7 +444,7 @@ bool xr_file_system::parse_fs_spec(xr_reader& reader)
 		int c = *p;
 		if(c == '$')
 		{
-			const char *last = read_alias(p, end);
+			auto last = read_alias(p, end);
 			if(last == nullptr)
 			{
 				spdlog::error("can't parse line {}", line);
@@ -419,8 +459,8 @@ bool xr_file_system::parse_fs_spec(xr_reader& reader)
 				return false;
 			}
 
-			int i;
-			for(i = -2; i < 4;)
+			int i = -2;
+			while(i < 4)
 			{
 				last = read_value(p, end);
 				if(i < 0 && (last == end || *last != '|'))
@@ -429,21 +469,27 @@ bool xr_file_system::parse_fs_spec(xr_reader& reader)
 					return false;
 				}
 				if(i >= 0)
+				{
 					values.at(static_cast<std::size_t>(i)).assign(p, last);
+				}
 
 				p = last + 1;
 				++i;
 
 				if(p == end || *last != '|')
+				{
 					break;
+				}
 			}
 
 			assert(i > 0);
 
 			if(i < 2)
+			{
 				values.at(1).clear();
+			}
 
-			path_alias *pa = add_path_alias(alias, values.at(0), values.at(1));
+			auto pa = add_path_alias(alias, values.at(0), values.at(1));
 			if(pa == nullptr)
 			{
 				spdlog::error("can't parse line {}", line);
@@ -451,9 +497,13 @@ bool xr_file_system::parse_fs_spec(xr_reader& reader)
 			}
 
 			if(i > 2)
+			{
 				pa->filter = values.at(2);
+			}
 			if(i > 3)
+			{
 				pa->caption = values.at(3);
+			}
 		}
 		else if(c != ';' && !std::isspace(c))
 		{
@@ -464,7 +514,7 @@ bool xr_file_system::parse_fs_spec(xr_reader& reader)
 	return true;
 }
 
-xr_mmap_reader_posix::xr_mmap_reader_posix(): xr_reader(nullptr, 0), m_fd(-1), m_file_length(0), m_mem_length(0) {}
+xr_mmap_reader_posix::xr_mmap_reader_posix() : xr_reader(nullptr, 0), m_fd(-1), m_file_length(0), m_mem_length(0) {}
 
 xr_mmap_reader_posix::xr_mmap_reader_posix(int fd, void *data, size_t file_length, size_t mem_lenght) :
     xr_reader(data, file_length), m_fd(fd), m_file_length(file_length), m_mem_length(mem_lenght) {}
@@ -489,7 +539,7 @@ xr_mmap_reader_posix::~xr_mmap_reader_posix()
 		}
 	}
 
-	int res = posix_fadvise(m_fd, 0, static_cast<off_t>(m_file_length), POSIX_FADV_DONTNEED); //POSIX_FADV_NOREUSE
+	auto res = posix_fadvise(m_fd, 0, static_cast<off_t>(m_file_length), POSIX_FADV_DONTNEED); //POSIX_FADV_NOREUSE
 	if(res != 0)
 	{
 		spdlog::error("posix_fadvise failed: {} (errno={}) ", strerror(errno), errno);
@@ -502,9 +552,9 @@ xr_mmap_reader_posix::~xr_mmap_reader_posix()
 	}
 }
 
-xr_file_writer_posix::xr_file_writer_posix(): m_fd(-1) {}
+xr_file_writer_posix::xr_file_writer_posix() : m_fd(-1) {}
 
-xr_file_writer_posix::xr_file_writer_posix(int fd): m_fd(fd) {}
+xr_file_writer_posix::xr_file_writer_posix(int fd) : m_fd(fd) {}
 
 xr_file_writer_posix::~xr_file_writer_posix()
 {

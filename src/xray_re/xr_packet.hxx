@@ -46,24 +46,24 @@ namespace xray_re
 			void w_seek(size_t pos);
 			void w_begin(uint16_t id);
 
-			const char*	skip_sz();
+			const char* skip_sz();
 
-			template<typename T> void	r(T& value);
+			template<typename T> void r(T& value);
 			template<typename T> T r();
-			template<typename T> void	r_cseq(size_t n, T values[]);
-			template<typename T> void	r_seq(size_t n, T& container);
+			template<typename T> void r_cseq(size_t n, T values[]);
+			template<typename T> void r_seq(size_t n, T& container);
 			void r_raw(void *data, size_t size);
 			void r_sz(std::string& value);
-			uint64_t	r_u64();
+			uint64_t r_u64();
 			void r_u64(uint64_t& value);
 			void r_s64(int64_t& value);
-			uint32_t	r_u32();
+			uint32_t r_u32();
 			void r_u32(uint32_t& value);
 			int32_t r_s32();
 			void r_s32(int32_t& value);
-			uint32_t	r_u24();
+			uint32_t r_u24();
 			void r_u24(uint32_t& value);
-			uint16_t	r_u16();
+			uint16_t r_u16();
 			void r_u16(uint16_t& value);
 			int16_t r_s16();
 			void r_s16(int16_t& value);
@@ -154,19 +154,25 @@ namespace xray_re
 
 	template<typename T> inline void xr_packet::r_cseq(size_t n, T values[])
 	{
-		for (T *p = values, *end = p + n; p != end; ++p)
+		for(T *p = values, *end = p + n; p != end; ++p)
+		{
 			r<T>(*p);
+		}
 	}
 
 	template<typename T> inline void xr_packet::w_cseq(size_t n, const T values[])
 	{
-		if (n)
+		if(n)
+		{
 			w_raw(values, n*sizeof(T));
+		}
 	}
 
 	template<typename T> inline void xr_packet::w_seq(const T& container)
 	{
-		if (!container.empty())
+		if(!container.empty())
+		{
 			w_raw(&container[0], container.size()*sizeof(typename T::value_type));
+		}
 	}
 }

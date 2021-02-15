@@ -71,11 +71,11 @@ int main(int argc, char *argv[])
 			spdlog::set_level(spdlog::level::debug);
 		}
 
-		if (vm.count("help"))
+		if(vm.count("help"))
 		{
 			spdlog::info("Usage examples:");
 			spdlog::info("  db_converter --unpack resources.db0 --xdb --dir ~/extracted");
-			spdlog::info( "  db_converter --pack ~/dir_to_pack/ --out ~/packed.db --xdb");
+			spdlog::info("  db_converter --pack ~/dir_to_pack/ --out ~/packed.db --xdb");
 			std::stringstream all_options_string;
 			all_options_string << all_options;
 			spdlog::info(all_options_string.str());
@@ -95,12 +95,12 @@ int main(int argc, char *argv[])
 
 		unsigned short int tools_type = db_tools::TOOLS_AUTO;
 
-		if (vm.count("unpack"))
+		if(vm.count("unpack"))
 		{
 			tools_type = db_tools::TOOLS_DB_UNPACK;
 		}
 
-		if (vm.count("pack"))
+		if(vm.count("pack"))
 		{
 			tools_type = db_tools::TOOLS_DB_PACK;
 		}
@@ -108,14 +108,14 @@ int main(int argc, char *argv[])
 		std::string fs_spec;
 
 		unsigned int fs_flags = 0;
-		if (vm.count("ro"))
+		if(vm.count("ro"))
 		{
 			fs_flags |= xr_file_system::FSF_READ_ONLY;
 			spdlog::info("Working in read-only mode");
 		}
 
 		xr_file_system& fs = xr_file_system::instance();
-		if (!fs.initialize(fs_spec, fs_flags))
+		if(!fs.initialize(fs_spec, fs_flags))
 		{
 			spdlog::critical("Can't initialize the file system");
 			return 1;
@@ -125,32 +125,32 @@ int main(int argc, char *argv[])
 		{
 			db_tools::db_version version = db_tools::DB_VERSION_AUTO;
 
-			if (vm.count("11xx"))
+			if(vm.count("11xx"))
 				version = db_tools::DB_VERSION_1114;
-			if (vm.count("2215"))
+			if(vm.count("2215"))
 				version = db_tools::DB_VERSION_2215;
-			if (vm.count("2945"))
+			if(vm.count("2945"))
 				version = db_tools::DB_VERSION_2945;
-			if (vm.count("2947ru"))
+			if(vm.count("2947ru"))
 				version = db_tools::DB_VERSION_2947RU;
-			if (vm.count("2947ww"))
+			if(vm.count("2947ww"))
 				version = db_tools::DB_VERSION_2947WW;
-			if (vm.count("xdb"))
+			if(vm.count("xdb"))
 				version = db_tools::DB_VERSION_XDB;
 
-			if (version == db_tools::DB_VERSION_AUTO)
+			if(version == db_tools::DB_VERSION_AUTO)
 			{
-				if (db_tools::is_xdb(extension) || db_tools::is_db(extension))
+				if(db_tools::is_xdb(extension) || db_tools::is_db(extension))
 				{
 					spdlog::info("Auto-detected version: xdb");
 					version = db_tools::DB_VERSION_XDB;
 				}
-				else if (db_tools::is_xrp(extension))
+				else if(db_tools::is_xrp(extension))
 				{
 					spdlog::info("Auto-detected version: 1114");
 					version = db_tools::DB_VERSION_1114;
 				}
-				else if (db_tools::is_xp(extension))
+				else if(db_tools::is_xp(extension))
 				{
 					spdlog::info("Auto-detected version: 2215");
 					version = db_tools::DB_VERSION_2215;
@@ -171,7 +171,7 @@ int main(int argc, char *argv[])
 
 				db_tools::db_version version = get_db_version(vm, extension);
 
-				if (version == db_tools::DB_VERSION_AUTO)
+				if(version == db_tools::DB_VERSION_AUTO)
 				{
 					spdlog::error("unspecified DB format");
 					break;
@@ -198,7 +198,7 @@ int main(int argc, char *argv[])
 
 				db_tools::db_version version = get_db_version(vm, extension);
 
-				if (version == db_tools::DB_VERSION_AUTO)
+				if(version == db_tools::DB_VERSION_AUTO)
 				{
 					spdlog::error("unspecified DB format");
 					break;

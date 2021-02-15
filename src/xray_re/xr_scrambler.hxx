@@ -28,7 +28,7 @@ namespace xray_re
 			SBOX_SIZE = 256
 		};
 
-		void init_sboxes(int seed0, std::size_t size_mult);
+		void init_sboxes(int seed, std::size_t size_mult);
 
 		int m_seed;
 		std::array<uint8_t, SBOX_SIZE> m_enc_sbox;

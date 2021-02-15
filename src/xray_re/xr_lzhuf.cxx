@@ -19,14 +19,12 @@ using namespace xray_re;
 
 void _lzhuf::InitTree()
 {
-	int i;
-
-	for(i = N + 1; i <= N + 256; i++)
+	for(int i = N + 1; i <= N + 256; i++)
 	{
 		rson[i] = NIL; // Root
 	}
 
-	for(i = 0; i < N; i++)
+	for(int i = 0; i < N; i++)
 	{
 		dad[i] = NIL; // Node
 	}
@@ -34,9 +32,9 @@ void _lzhuf::InitTree()
 
 void _lzhuf::InsertNode(int r)
 {
-	int cmp = 1;
+	auto cmp = 1;
 	auto key = &text_buf[r];
-	int p = N + 1 + key[0];
+	auto p = N + 1 + key[0];
 	rson[r] = lson[r] = NIL;
 	match_length = 0;
 	while(true)
@@ -141,7 +139,7 @@ void _lzhuf::DeleteNode(int p)
 			{
 				q = rson[q];
 			}
-			while (rson[q] != NIL);
+			while(rson[q] != NIL);
 
 			rson[dad[q]] = lson[q];
 			dad[lson[q]] = dad[q];
@@ -273,7 +271,7 @@ int _lzhuf::GetBit()
 {
 	int i;
 
-	while (getlen <= 8)
+	while(getlen <= 8)
 	{
 		if((i = getc()) < 0)
 		{
@@ -295,7 +293,7 @@ int _lzhuf::GetByte()
 {
 	int i;
 
-	while (getlen <= 8)
+	while(getlen <= 8)
 	{
 		int c = getc();
 		i = (c < 0) ? 0 : c;
@@ -334,23 +332,18 @@ void _lzhuf::Putcode(int l, unsigned int c)
 
 void _lzhuf::StartHuff()
 {
-	int i, j;
-
-	for(i = 0; i < N_CHAR; i++)
+	for(int i = 0; i < N_CHAR; i++)
 	{
 		freq[i] = 1;
 		son[i] = i + T;
 		prnt[i + T] = i;
 	}
 
-	i = 0; j = N_CHAR;
-
-	while (j <= R)
+	for(int i = 0, j = N_CHAR; j <= R; i += 2, j++)
 	{
 		freq[j] = freq[i] + freq[i + 1];
 		son[j] = i;
 		prnt[i] = prnt[i + 1] = j;
-		i += 2; j++;
 	}
 
 	freq[T] = 0xffff;
@@ -373,11 +366,11 @@ void _lzhuf::reconst()
 	// Begin constructing tree by connecting sons
 	for(int i = 0, j = N_CHAR; j < T; i += 2, j++)
 	{
-		int k = i + 1;
-		unsigned int f = freq[j] = freq[i] + freq[k];
+		auto k = i + 1;
+		auto f = freq[j] = freq[i] + freq[k];
 
 		k = j - 1;
-		while (f < freq[k])
+		while(f < freq[k])
 		{
 			k--;
 		}
@@ -416,7 +409,7 @@ void _lzhuf::update(int c)
 		// If the order is disturbed, exchange nodes
 		if(k > freq[l])
 		{
-			while (k > freq[++l]);
+			while(k > freq[++l]);
 			l--;
 			freq[c] = freq[l];
 			freq[l] = k;
@@ -441,14 +434,14 @@ void _lzhuf::update(int c)
 			c = l;
 		}
 	}
-	while ((c = prnt[c]) != 0);	// Repeat up to root
+	while((c = prnt[c]) != 0); // Repeat up to root
 }
 
 void _lzhuf::EncodeChar(unsigned int c)
 {
-	unsigned i = 0;
-	int j = 0;
-	int k = prnt[c + T];
+	auto i = 0u;
+	auto j = 0;
+	auto k = prnt[c + T];
 
 	// Travel from leaf to root
 	do
@@ -463,7 +456,7 @@ void _lzhuf::EncodeChar(unsigned int c)
 
 		j++;
 	}
-	while ((k = prnt[k]) != R);
+	while((k = prnt[k]) != R);
 
 	Putcode(j, i);
 //	code = i;
@@ -474,7 +467,7 @@ void _lzhuf::EncodeChar(unsigned int c)
 void _lzhuf::EncodePosition(unsigned int c)
 {
 	// Output upper 6 bits by table lookup
-	unsigned int i = c >> 6;
+	auto i = c >> 6;
 	Putcode(p_len.at(i), static_cast<unsigned int>(p_code.at(i)) << 8);
 
 	// Output lower 6 bits verbatim
@@ -492,10 +485,10 @@ void _lzhuf::EncodeEnd()
 
 int _lzhuf::DecodeChar()
 {
-	int c = son[R];
+	auto c = son[R];
 
 	// Travel from root to leaf, choosing the smaller child node (son[]) if the read bit is 0, the bigger (son[]+1} if 1
-	while (c < T)
+	while(c < T)
 	{
 		c += GetBit();
 		c = son[c];
@@ -509,13 +502,13 @@ int _lzhuf::DecodeChar()
 int _lzhuf::DecodePosition()
 {
 	// recover upper 6 bits from table
-	int i = GetByte();
-	int c = d_code.at(i) << 6;
-	int j = d_len.at(i);
+	auto i = GetByte();
+	auto c = d_code.at(i) << 6;
+	auto j = d_len.at(i);
 
 	// read lower 6 bits verbatim
 	j -= 2;
-	while (j--)
+	while(j--)
 	{
 		i = (i << 1) + GetBit();
 	}
@@ -594,7 +587,7 @@ void _lzhuf::Encode(uint8_t *&_code, uint32_t& _codesize, const uint8_t *_text, 
 			r = (r + 1) & (N - 1);
 			InsertNode(r);
 		}
-		while (i++ < last_match_length)
+		while(i++ < last_match_length)
 		{
 			DeleteNode(s);
 			s = (s + 1) & (N - 1);
@@ -606,7 +599,7 @@ void _lzhuf::Encode(uint8_t *&_code, uint32_t& _codesize, const uint8_t *_text, 
 			}
 		}
 	}
-	while (len > 0);
+	while(len > 0);
 	EncodeEnd();
 	_code = m_dest;
 	_codesize = m_dest_pos;
@@ -631,10 +624,10 @@ void _lzhuf::Decode(uint8_t *&_text, uint32_t& _textsize, const uint8_t *_code, 
 		text_buf[i] = ' ';
 	}
 
-	int r = N - F;
+	auto r = N - F;
 	for(uint32_t count = 0; count < textsize;)
 	{
-		int c = DecodeChar();
+		auto c = DecodeChar();
 		if(c < 256)
 		{
 			putc(c);
@@ -644,8 +637,8 @@ void _lzhuf::Decode(uint8_t *&_text, uint32_t& _textsize, const uint8_t *_code, 
 		}
 		else
 		{
-			int i = (r - DecodePosition() - 1) & (N - 1);
-			int j = c - 255 + THRESHOLD;
+			auto i = (r - DecodePosition() - 1) & (N - 1);
+			auto j = c - 255 + THRESHOLD;
 
 			for(int k = 0; k < j; k++)
 			{

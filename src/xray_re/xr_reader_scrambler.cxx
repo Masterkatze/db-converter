@@ -14,7 +14,7 @@ xr_reader* xr_reader::open_chunk(uint32_t id, const xr_scrambler& scrambler)
 	spdlog::debug("xr_reader_scrambler::open_chunk chunk_id={} compressed={}", id & ~CHUNK_COMPRESSED, (id & CHUNK_COMPRESSED) != 0);
 
 	bool compressed;
-	size_t size = find_chunk(id, compressed);
+	auto size = find_chunk(id, compressed);
 
 	if(size == 0)
 	{

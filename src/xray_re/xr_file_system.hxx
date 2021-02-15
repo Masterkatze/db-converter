@@ -34,13 +34,13 @@ namespace xray_re
 
 		static xr_reader* r_open(const std::string& path);
 		xr_reader* r_open(const std::string& path, const std::string& name) const;
-		static void r_close(xr_reader*& r);
+		static void r_close(xr_reader*& reader);
 		xr_writer* w_open(const std::string& path, bool ignore_ro = false) const;
 		xr_writer* w_open(const std::string& path, const std::string& name, bool ignore_ro = false) const;
-		static void w_close(xr_writer*& w);
+		static void w_close(xr_writer*& writer);
 
-		bool copy_file(const std::string& src_path, const std::string& src_name, const std::string& tgt_path, const std::string& tgt_name = nullptr) const;
-		bool copy_file(const std::string& src_path, const std::string& tgt_path) const;
+		bool copy_file(const std::string& src_path, const std::string& src_name, const std::string& dst_path, const std::string& tgt_name = nullptr) const;
+		bool copy_file(const std::string& src_path, const std::string& dst_path) const;
 
 		static size_t file_length(const std::string& path);
 		static uint32_t file_age(const std::string& path);

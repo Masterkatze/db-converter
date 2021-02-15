@@ -43,28 +43,31 @@ std::size_t GetNumberOfFilesAndDirectories(const std::string &path)
 	return std::distance(recursive_directory_iterator(path), recursive_directory_iterator{});
 }
 
-void CompareChecksums(const std::string& game, db_tools::db_version version, unsigned int crc32, unsigned int number_of_files) {
-	std::string file_name = "mp_pool.db";
-	std::string folder_path = "/home/orange/dev/db_converter_data/";
-	std::string original_file_path = folder_path + game + "/original/" + file_name;
-	std::string unpack_path = folder_path + game + "/unpacked";
-	std::string packed_file_path = folder_path + game + "/packed/" + file_name;
+void CompareChecksums(const std::string& file_path, db_tools::db_version version, unsigned int crc32, unsigned int number_of_files)
+{
+	std::string temp_path = "/tmp/db_converter/gtest_compare/";
+	std::string unpack_path = temp_path + "unpacked";
+	std::string packed_file_path = temp_path + "packed/packed.db";
 	std::string userdata_file_path = unpack_path + "_userdata.ltx";
 	std::string filter = "";
 
-	ASSERT_TRUE(fs::exists(original_file_path));
+	ASSERT_TRUE(fs::exists(file_path));
+
 	fs::remove_all(unpack_path);
 	ASSERT_FALSE(fs::exists(unpack_path));
 
+	fs::remove_all(packed_file_path);
+	ASSERT_FALSE(fs::exists(packed_file_path));
+
 	{
-		auto checksum = GetChecksum(original_file_path);
+		auto checksum = GetChecksum(file_path);
 		ASSERT_TRUE(checksum.has_value());
 		EXPECT_EQ(checksum.value(), crc32);
 	}
 	{
 		db_unpacker unpacker;
 		unpacker.set_debug(true);
-		unpacker.process(original_file_path, unpack_path, version, filter);
+		unpacker.process(file_path, unpack_path, version, filter);
 
 		EXPECT_EQ(GetNumberOfFilesAndDirectories(unpack_path), number_of_files);
 	}
@@ -78,15 +81,17 @@ void CompareChecksums(const std::string& game, db_tools::db_version version, uns
 		EXPECT_EQ(checksum.value(), crc32);
 	}
 
-	ASSERT_EQ(fs::file_size(original_file_path), fs::file_size(packed_file_path));
+	ASSERT_EQ(fs::file_size(file_path), fs::file_size(packed_file_path));
 }
 
 TEST(Compare, ClearSkyChecksums)
 {
-	CompareChecksums("cs", db_tools::db_version::DB_VERSION_XDB, 1778816644, 15);
+	auto path = std::string(getenv("HOME")) + "/.local/share/GSC Game World/S.T.A.L.K.E.R. - Clear Sky/mp/mp_pool.db";
+	CompareChecksums(path, db_tools::db_version::DB_VERSION_XDB, 1778816644, 15);
 }
 
 TEST(Compare, CallOfPripyatChecksums)
 {
-	CompareChecksums("cop", db_tools::db_version::DB_VERSION_XDB, 2187792425, 16);
+	auto path = std::string(getenv("HOME")) + "/.local/share/GSC Game World/S.T.A.L.K.E.R. - Call of Pripyat/mp/mp_pool.db";
+	CompareChecksums(path, db_tools::db_version::DB_VERSION_XDB, 2187792425, 16);
 }

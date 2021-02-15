@@ -4,7 +4,7 @@
 
 using namespace xray_re;
 
-xr_packet::xr_packet(): m_buf{}, m_w_pos(0), m_r_pos(0) { }
+xr_packet::xr_packet() : m_buf{}, m_w_pos(0), m_r_pos(0) { }
 
 void xr_packet::r_raw(void *data, size_t size)
 {
@@ -35,7 +35,7 @@ void xr_packet::w_begin(uint16_t id)
 const char* xr_packet::skip_sz()
 {
 	auto p = reinterpret_cast<const char*>(m_buf + m_r_pos);
-	while (m_r_pos < sizeof(m_buf))
+	while(m_r_pos < sizeof(m_buf))
 	{
 		if(m_buf[m_r_pos++] == 0)
 		{
@@ -51,7 +51,7 @@ const char* xr_packet::skip_sz()
 void xr_packet::r_sz(std::string& value)
 {
 	auto p = &m_buf[m_r_pos];
-	while (m_r_pos < sizeof(m_buf))
+	while(m_r_pos < sizeof(m_buf))
 	{
 		if(m_buf[m_r_pos++] == 0)
 		{

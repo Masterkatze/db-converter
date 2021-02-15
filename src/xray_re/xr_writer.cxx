@@ -24,8 +24,8 @@ void xr_writer::close_chunk()
 {
 	assert(!m_open_chunks.empty());
 
-	size_t pos = tell();
-	size_t chunk_pos = m_open_chunks.top();
+	auto pos = tell();
+	auto chunk_pos = m_open_chunks.top();
 	assert(chunk_pos <= pos);
 
 	seek(chunk_pos - 4);
@@ -46,9 +46,9 @@ void xr_writer::w_raw_chunk(uint32_t id, const void *data, size_t size)
 void xr_writer::w_sz(const std::string& value)
 {
 	// do not write extra '\0'
-	//	size_t length = value.length() + 1;
-	//	const char *c_str = value.c_str();
-	//	if(len > 0 && c_str[len] == '\0')
+	// size_t length = value.length() + 1;
+	// const char *c_str = value.c_str();
+	// if(len > 0 && c_str[len] == '\0')
 	w_raw(value.data(), value.length() + 1);
 }
 
@@ -75,7 +75,7 @@ void xr_writer::w_packet(const xr_packet& packet)
 	w_raw(packet.buf(), packet.w_tell());
 }
 
-xr_memory_writer::xr_memory_writer(): m_pos(0) {}
+xr_memory_writer::xr_memory_writer() : m_pos(0) {}
 
 xr_memory_writer::~xr_memory_writer() = default;
 
@@ -109,7 +109,7 @@ size_t xr_memory_writer::tell()
 bool xr_memory_writer::save_to(const std::string& path, const std::string& name)
 {
 	xr_file_system& fs = xr_file_system::instance();
-	xr_writer *w = fs.w_open(path, name);
+	auto w = fs.w_open(path, name);
 	if(w == nullptr)
 	{
 		return false;
@@ -123,7 +123,7 @@ bool xr_memory_writer::save_to(const std::string& path, const std::string& name)
 bool xr_memory_writer::save_to(const std::string& path)
 {
 	xr_file_system& fs = xr_file_system::instance();
-	xr_writer *w = fs.w_open(path);
+	auto w = fs.w_open(path);
 	if(w == nullptr)
 	{
 		return false;
@@ -134,7 +134,7 @@ bool xr_memory_writer::save_to(const std::string& path)
 	return true;
 }
 
-xr_fake_writer::xr_fake_writer(): m_pos(0), m_size(0) {}
+xr_fake_writer::xr_fake_writer() : m_pos(0), m_size(0) {}
 
 xr_fake_writer::~xr_fake_writer() = default;
 

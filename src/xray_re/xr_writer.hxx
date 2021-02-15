@@ -59,7 +59,7 @@ namespace xray_re
 
 		template<typename T> struct f_w_const: public std::const_mem_fun1_t<void, T, xr_writer&>
 		{
-			explicit f_w_const(void (T::*_pmf)(xr_writer& w) const): std::const_mem_fun1_t<void, T, xr_writer&>(_pmf) {}
+			explicit f_w_const(void (T::*_pmf)(xr_writer& w) const) : std::const_mem_fun1_t<void, T, xr_writer&>(_pmf) {}
 		};
 
 	private:
@@ -116,13 +116,15 @@ namespace xray_re
 
 	template<typename T, typename F> inline void xr_writer::w_cseq(size_t n, const T values[], F write)
 	{
-		for (const T *p = values, *end = p + n; p != end; ++p)
+		for(const T *p = values, *end = p + n; p != end; ++p)
+		{
 			write(*p, *this);
+		}
 	}
 
 	template<typename T, typename F> inline void xr_writer::w_seq(const T& container, F write)
 	{
-		for (typename T::const_iterator it = container.begin(), end = container.end(); it != end; ++it)
+		for(typename T::const_iterator it = container.begin(), end = container.end(); it != end; ++it)
 		{
 			write(*it, *this);
 		}
@@ -143,7 +145,7 @@ namespace xray_re
 	template<typename T, typename F> inline void xr_writer::w_chunks(const T& container, F write)
 	{
 		typename T::const_iterator it = container.begin(), end = container.end();
-		for (uint32_t id = 0; it != end; ++it)
+		for(uint32_t id = 0; it != end; ++it)
 		{
 			open_chunk(id++);
 			write(*it, *this);

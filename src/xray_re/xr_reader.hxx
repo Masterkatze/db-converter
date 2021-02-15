@@ -133,7 +133,7 @@ namespace xray_re
 	template<typename T, typename F> inline void xr_reader::r_seq(size_t n, T& container, F read)
 	{
 		container.reserve(n);
-		while (n--)
+		while(n--)
 		{
 			container.push_back(typename T::value_type());
 			read(container.back(), *this);
@@ -142,14 +142,18 @@ namespace xray_re
 
 	template<typename T> inline void xr_reader::r_cseq(size_t n, T values[])
 	{
-		for (T *p = values, *end = p + n; p != end; ++p)
+		for(T *p = values, *end = p + n; p != end; ++p)
+		{
 			r<T>(*p);
+		}
 	}
 
 	template<typename T, typename F> inline void xr_reader::r_cseq(size_t n, T values[], F read)
 	{
-		for (T *p = values, *end = p + n; p != end; ++p)
+		for(T *p = values, *end = p + n; p != end; ++p)
+		{
 			read(*p, *this);
+		}
 	}
 
 	template<typename T> inline size_t xr_reader::r_chunk(uint32_t id, T& value)
@@ -160,7 +164,7 @@ namespace xray_re
 	template<> inline size_t xr_reader::r_chunk(uint32_t id, std::string& value)
 	{
 		size_t size = find_chunk(id);
-		if (size)
+		if(size)
 		{
 			r_sz(value);
 			debug_find_chunk();
@@ -171,7 +175,7 @@ namespace xray_re
 	template<typename T, typename F> inline void xr_reader::r_chunks(T& container, F read)
 	{
 		xr_reader* s;
-		for (uint32_t id = 0; (s = open_chunk(id)); ++id)
+		for(uint32_t id = 0; (s = open_chunk(id)); ++id)
 		{
 			container.push_back(typename T::value_type());
 			read(container.back(), *s);
@@ -184,5 +188,5 @@ namespace xray_re
 		assert(m_p == m_debug_find_chunk);
 	}
 
-	inline xr_temp_reader::xr_temp_reader(const uint8_t *data, size_t size): xr_reader(data, size) {}
+	inline xr_temp_reader::xr_temp_reader(const uint8_t *data, size_t size) : xr_reader(data, size) {}
 }
