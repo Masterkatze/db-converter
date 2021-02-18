@@ -53,6 +53,7 @@ namespace xray_re
 		void update_path(const std::string& path, const std::string& root, const std::string& add);
 		static void append_path_separator(std::string& path);
 		static split_path_t split_path(const std::string& path);
+		static std::string current_path();
 
 	protected:
 		struct path_alias

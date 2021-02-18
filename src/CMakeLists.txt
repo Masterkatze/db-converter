@@ -7,6 +7,10 @@ add_compile_definitions(SPDLOG_FMT_EXTERNAL)
 add_library(db_tools SHARED
 	"db_tools.cxx"
 	"db_tools.hxx"
+	"packer.cxx"
+	"packer.hxx"
+	"unpacker.cxx"
+	"unpacker.hxx"
 	"crc32/crc32.cxx"
 	"crc32/crc32.hxx"
 	"lzo/lzoconf.h"

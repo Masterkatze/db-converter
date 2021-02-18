@@ -572,7 +572,7 @@ void _lzhuf::Encode(uint8_t *&_code, uint32_t& _codesize, const uint8_t *_text, 
 			EncodePosition(static_cast<unsigned int>(match_position));
 		}
 
-		int last_match_length = match_length;
+		auto last_match_length = match_length;
 		for(i = 0; i < last_match_length && (c = getc()) >= 0; i++)
 		{
 			DeleteNode(s);

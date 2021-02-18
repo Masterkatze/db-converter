@@ -43,7 +43,7 @@ std::size_t GetNumberOfFilesAndDirectories(const std::string &path)
 	return std::distance(recursive_directory_iterator(path), recursive_directory_iterator{});
 }
 
-void CompareChecksums(const std::string& file_path, db_tools::db_version version, unsigned int crc32, unsigned int number_of_files)
+void CompareChecksums(const std::string& file_path, xray_re::DBVersion version, unsigned int crc32, unsigned int number_of_files)
 {
 	std::string temp_path = "/tmp/db_converter/gtest_compare/";
 	std::string unpack_path = temp_path + "unpacked";
@@ -59,22 +59,20 @@ void CompareChecksums(const std::string& file_path, db_tools::db_version version
 	fs::remove_all(packed_file_path);
 	ASSERT_FALSE(fs::exists(packed_file_path));
 
+	DBTools::set_debug(true);
+
 	{
 		auto checksum = GetChecksum(file_path);
 		ASSERT_TRUE(checksum.has_value());
 		EXPECT_EQ(checksum.value(), crc32);
 	}
 	{
-		db_unpacker unpacker;
-		unpacker.set_debug(true);
-		unpacker.process(file_path, unpack_path, version, filter);
+		DBTools::unpack(file_path, unpack_path, version, filter);
 
 		EXPECT_EQ(GetNumberOfFilesAndDirectories(unpack_path), number_of_files);
 	}
 	{
-		db_packer packer;
-		packer.set_debug(true);
-		packer.process(unpack_path, packed_file_path, version, userdata_file_path);
+		DBTools::pack(unpack_path, packed_file_path, version, userdata_file_path);
 
 		auto checksum = GetChecksum(packed_file_path);
 		ASSERT_TRUE(checksum.has_value());
@@ -87,11 +85,11 @@ void CompareChecksums(const std::string& file_path, db_tools::db_version version
 TEST(Compare, ClearSkyChecksums)
 {
 	auto path = std::string(getenv("HOME")) + "/.local/share/GSC Game World/S.T.A.L.K.E.R. - Clear Sky/mp/mp_pool.db";
-	CompareChecksums(path, db_tools::db_version::DB_VERSION_XDB, 1778816644, 15);
+	CompareChecksums(path, xray_re::DBVersion::DB_VERSION_XDB, 1778816644, 15);
 }
 
 TEST(Compare, CallOfPripyatChecksums)
 {
 	auto path = std::string(getenv("HOME")) + "/.local/share/GSC Game World/S.T.A.L.K.E.R. - Call of Pripyat/mp/mp_pool.db";
-	CompareChecksums(path, db_tools::db_version::DB_VERSION_XDB, 2187792425, 16);
+	CompareChecksums(path, xray_re::DBVersion::DB_VERSION_XDB, 2187792425, 16);
 }

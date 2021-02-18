@@ -76,7 +76,7 @@ xr_reader* xr_reader::open_chunk(uint32_t id)
 //		if(id == 1)
 //		{
 //			std::ofstream test_file_header;
-//			test_file_header.open("/home/orange/projects/stalker/test_data/cop/bin/header.bin", std::ios::binary);
+//			test_file_header.open("/tmp/stalker/test_data/cop/bin/header.bin", std::ios::binary);
 //			test_file_header.write((const char*)data, real_size);
 //			test_file_header.close();
 //		}
@@ -91,7 +91,7 @@ xr_reader* xr_reader::open_chunk(uint32_t id)
 
 void xr_reader::close_chunk(xr_reader *&r) const
 {
-	assert(r == nullptr || (r != this && r->m_p <= r->m_end));
+	assert(!r || (r != this && r->m_p <= r->m_end));
 	delete r;
 	r = nullptr;
 }
@@ -245,7 +245,7 @@ void xr_reader::r_packet(xr_packet& packet, size_t size)
 
 xr_temp_reader::~xr_temp_reader()
 {
-	if(m_data != nullptr)
+	if(m_data)
 	{
 		free(const_cast<uint8_t*>(m_data));
 		m_data = nullptr;

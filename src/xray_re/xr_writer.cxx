@@ -110,7 +110,7 @@ bool xr_memory_writer::save_to(const std::string& path, const std::string& name)
 {
 	xr_file_system& fs = xr_file_system::instance();
 	auto w = fs.w_open(path, name);
-	if(w == nullptr)
+	if(!w)
 	{
 		return false;
 	}
@@ -124,7 +124,7 @@ bool xr_memory_writer::save_to(const std::string& path)
 {
 	xr_file_system& fs = xr_file_system::instance();
 	auto w = fs.w_open(path);
-	if(w == nullptr)
+	if(!w)
 	{
 		return false;
 	}

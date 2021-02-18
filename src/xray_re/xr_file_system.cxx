@@ -34,7 +34,7 @@ bool xr_file_system::initialize(const std::string& fs_spec, unsigned flags)
 	if(!fs_spec.empty() && fs_spec[0] != '\0')
 	{
 		auto reader = r_open(fs_spec);
-		if(reader == nullptr)
+		if(!reader)
 		{
 			return false;
 		}
@@ -98,15 +98,12 @@ xr_reader* xr_file_system::r_open(const std::string& path)
 		}
 	}
 
-	auto reader = new xr_mmap_reader_posix(fd, data, file_size, mem_size);
-
-	return reader ? reader : nullptr;
+	return new xr_mmap_reader_posix(fd, data, file_size, mem_size);
 }
 
 xr_reader* xr_file_system::r_open(const std::string& path, const std::string& name) const
 {
-	auto pa = find_path_alias(path);
-	return pa ? r_open(pa->root + name) : nullptr;
+	return r_open(find_path_alias(path)->root + name);
 }
 
 void xr_file_system::r_close(xr_reader *&reader)
@@ -129,14 +126,12 @@ xr_writer* xr_file_system::w_open(const std::string& path, bool ignore_ro) const
 		return nullptr;
 	}
 
-	xr_writer *writer = new xr_file_writer_posix(fd);
-	return writer;
+	return new xr_file_writer_posix(fd);
 }
 
 xr_writer* xr_file_system::w_open(const std::string& path, const std::string& name,  bool ignore_ro) const
 {
-	auto pa = find_path_alias(path);
-	return pa ? w_open(pa->root + name, ignore_ro) : nullptr;
+	return w_open(find_path_alias(path)->root + name, ignore_ro);
 }
 
 void xr_file_system::w_close(xr_writer *&writer)
@@ -148,13 +143,13 @@ void xr_file_system::w_close(xr_writer *&writer)
 bool xr_file_system::copy_file(const std::string &src_path, const std::string &src_name, const std::string &dst_path, const std::string &tgt_name) const
 {
 	auto src_pa = find_path_alias(src_path);
-	if(src_pa == nullptr)
+	if(!src_pa )
 	{
 		return false;
 	}
 
 	auto tgt_pa = find_path_alias(dst_path);
-	if(tgt_pa == nullptr)
+	if(!tgt_pa)
 	{
 		return false;
 	}
@@ -200,12 +195,7 @@ bool xr_file_system::folder_exist(const std::string& path)
 
 bool xr_file_system::create_path(const std::string& path) const
 {
-	if(read_only())
-	{
-		return true;
-	}
-
-	if(std::filesystem::exists(path))
+	if(read_only() || std::filesystem::exists(path))
 	{
 		return true;
 	}
@@ -215,12 +205,7 @@ bool xr_file_system::create_path(const std::string& path) const
 
 bool xr_file_system::create_folder(const std::string& path) const
 {
-	if(read_only())
-	{
-		return true;
-	}
-
-	if(std::filesystem::exists(path))
+	if(read_only() || std::filesystem::exists(path))
 	{
 		return true;
 	}
@@ -230,8 +215,7 @@ bool xr_file_system::create_folder(const std::string& path) const
 
 const char* xr_file_system::resolve_path(const std::string& path) const
 {
-	auto pa = find_path_alias(path);
-	return pa != nullptr ? pa->root.c_str() : nullptr;
+	return find_path_alias(path)->root.c_str();
 }
 
 bool xr_file_system::resolve_path(const std::string& path, const std::string& name, std::string& full_path) const
@@ -297,13 +281,18 @@ split_path_t xr_file_system::split_path(const std::string& path)
 	return {fs_path.parent_path(), fs_path.stem(), fs_path.extension()};
 }
 
+std::string xr_file_system::current_path()
+{
+	return std::filesystem::current_path();
+}
+
 const xr_file_system::path_alias* xr_file_system::find_path_alias(const std::string& path) const
 {
 //	return *std::find_if(m_aliases.begin(), m_aliases.end(), [&path](xr_file_system::path_alias* alias) {
 //		return alias->path == path;
 //	});
 
-	for(auto alias : m_aliases)
+	for(const auto& alias : m_aliases)
 	{
 		if(alias->path == path)
 		{
@@ -318,9 +307,9 @@ xr_file_system::path_alias* xr_file_system::add_path_alias(const std::string& pa
 {
 	auto pa = find_path_alias(path);
 
-	assert(pa == nullptr);
+	assert(!pa);
 
-	if(pa != nullptr)
+	if(pa)
 	{
 		return nullptr;
 	}
@@ -366,7 +355,7 @@ static inline const char* read_alias(const char *p, const char *end)
 		return nullptr;
 	}
 
-	for(++p; p < end;)
+	for(++p; p < end; p++)
 	{
 		int c = *p;
 		if(c == '$')
@@ -378,8 +367,6 @@ static inline const char* read_alias(const char *p, const char *end)
 		{
 			break;
 		}
-
-		++p;
 	}
 	return nullptr;
 }
@@ -410,14 +397,14 @@ static inline const char* read_value(const char *&_p, const char *end)
 		int c = *p;
 		if(c == ' ' || c =='\t')
 		{
-			if(last_ws == nullptr)
+			if(!last_ws)
 			{
 				last_ws = p;
 			}
 		}
 		else if(c == '\n' || c == '\r' || c == '|')
 		{
-			if(last_ws == nullptr)
+			if(!last_ws)
 			{
 				last_ws = p;
 			}
@@ -522,7 +509,7 @@ xr_mmap_reader_posix::xr_mmap_reader_posix(int fd, void *data, size_t file_lengt
 xr_mmap_reader_posix::~xr_mmap_reader_posix()
 {
 	assert(m_fd != -1);
-	assert(m_data != nullptr);
+	assert(m_data);
 
 	if(m_mem_length != 0)
 	{
