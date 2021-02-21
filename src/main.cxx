@@ -113,15 +113,15 @@ int main(int argc, char *argv[])
 
 		std::string fs_spec;
 
-		unsigned int fs_flags = 0;
+		bool is_read_only = false;
 		if(vm.count("ro"))
 		{
-			fs_flags |= xr_file_system::FSF_READ_ONLY;
+			is_read_only = true;
 			spdlog::info("Working in read-only mode");
 		}
 
 		xr_file_system& fs = xr_file_system::instance();
-		if(!fs.initialize(fs_spec, fs_flags))
+		if(!fs.initialize(fs_spec, is_read_only))
 		{
 			spdlog::critical("Can't initialize the file system");
 			return 1;

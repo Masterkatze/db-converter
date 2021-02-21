@@ -19,17 +19,12 @@ namespace xray_re
 	class xr_file_system
 	{
 	public:
-		enum
-		{
-			FSF_READ_ONLY = 0x1,
-		};
-
 		xr_file_system();
 		~xr_file_system();
 
 		static xr_file_system& instance();
 
-		bool initialize(const std::string& fs_spec, unsigned flags = 0);
+		bool initialize(const std::string& fs_spec, bool is_read_only = false);
 		bool read_only() const;
 
 		static xr_reader* r_open(const std::string& path);
@@ -72,35 +67,6 @@ namespace xray_re
 
 	private:
 		std::vector<path_alias*> m_aliases;
-		unsigned int m_flags;
+		bool is_read_only;
 	};
-
-	class xr_mmap_reader_posix: public xr_reader
-	{
-	public:
-		xr_mmap_reader_posix();
-		xr_mmap_reader_posix(int fd, void *data, size_t file_length, size_t mem_lenght);
-		virtual ~xr_mmap_reader_posix();
-
-	private:
-		int m_fd;
-		size_t m_file_length;
-		size_t m_mem_length;
-	};
-
-	class xr_file_writer_posix: public xr_writer
-	{
-	public:
-		xr_file_writer_posix();
-		explicit xr_file_writer_posix(int fd);
-		virtual ~xr_file_writer_posix() override;
-		virtual void w_raw(const void *data, size_t length) override;
-		virtual void seek(size_t pos) override;
-		virtual size_t tell() override;
-
-	private:
-		int m_fd;
-	};
-
-	static const std::string PA_FS_ROOT = "$fs_root$";
 }

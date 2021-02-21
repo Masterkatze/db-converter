@@ -64,12 +64,6 @@ void xr_packet::r_sz(std::string& value)
 	value.assign(p, m_buf + m_r_pos);
 }
 
-float xr_packet::r_angle8()
-{
-	r_u8();
-	return 0;
-}
-
 void xr_packet::w_sz(const std::string& value)
 {
 	w_raw(value.data(), value.length() + 1);

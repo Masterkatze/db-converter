@@ -75,9 +75,6 @@ namespace xray_re
 		void putc(int c);
 
 	public:
-		_lzhuf();
-		~_lzhuf();
-
 		void Encode(uint8_t *&_code, uint32_t& _codesize, const uint8_t *_text, uint32_t _textsize);
 		void Decode(uint8_t *&_text, uint32_t& _textsize, const uint8_t *_code, uint32_t _codesize);
 	};
@@ -89,7 +86,7 @@ namespace xray_re
 		static xr_lzhuf* instance();
 
 	protected:
-		xr_lzhuf();
+		xr_lzhuf() = default;
 		xr_lzhuf(const xr_lzhuf& that);
 		xr_lzhuf& operator=(const xr_lzhuf& right);
 
@@ -97,10 +94,6 @@ namespace xray_re
 		static void compress(uint8_t *&_code, uint32_t& _codesize, const uint8_t *_text, uint32_t _textsize);
 		static void decompress(uint8_t *&_text, uint32_t& _textsize, const uint8_t *_code, uint32_t _codesize);
 	};
-
-	inline _lzhuf::_lzhuf() {}
-	inline _lzhuf::~_lzhuf() {}
-	inline xr_lzhuf::xr_lzhuf() {}
 
 	inline void xr_lzhuf::compress(uint8_t *&_code, uint32_t& _codesize, const uint8_t *_text, uint32_t _textsize)
 	{
