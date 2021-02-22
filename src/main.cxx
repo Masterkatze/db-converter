@@ -74,7 +74,6 @@ int main(int argc, char *argv[])
 		if(vm.count("debug"))
 		{
 			DBTools::set_debug(true);
-			spdlog::set_level(spdlog::level::debug);
 		}
 
 		if(vm.count("help"))
@@ -111,20 +110,11 @@ int main(int argc, char *argv[])
 			tools_type = ToolsType::PACK;
 		}
 
-		std::string fs_spec;
-
 		bool is_read_only = false;
 		if(vm.count("ro"))
 		{
 			is_read_only = true;
 			spdlog::info("Working in read-only mode");
-		}
-
-		xr_file_system& fs = xr_file_system::instance();
-		if(!fs.initialize(fs_spec, is_read_only))
-		{
-			spdlog::critical("Can't initialize the file system");
-			return 1;
 		}
 
 		auto version = DBVersion::DB_VERSION_AUTO;

@@ -2,6 +2,8 @@
 #include "unpacker.hxx"
 #include "packer.hxx"
 
+#include <spdlog/spdlog.h>
+
 using namespace xray_re;
 
 bool m_debug = false;
@@ -51,4 +53,8 @@ bool DBTools::is_known(const std::string& extension)
 void DBTools::set_debug(const bool value)
 {
 	m_debug = value;
+	if(m_debug)
+	{
+		spdlog::set_level(spdlog::level::debug);
+	}
 }

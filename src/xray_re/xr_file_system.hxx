@@ -6,14 +6,28 @@
 
 #include <string>
 #include <vector>
+#include <ostream>
 
 namespace xray_re
 {
-	struct split_path_t
+	struct SplitPath
 	{
 		std::string folder;
 		std::string name;
 		std::string extension;
+	};
+
+	struct PathAlias
+	{
+		std::string path;
+		std::string root;
+		std::string filter;
+		std::string caption;
+
+		inline std::string ToString()
+		{
+			return "{path=" + path + ", root=" + root + ", filter=" + filter + ", caption=" + caption + "}";
+		}
 	};
 
 	class xr_file_system
@@ -24,8 +38,7 @@ namespace xray_re
 
 		static xr_file_system& instance();
 
-		bool initialize(const std::string& fs_spec, bool is_read_only = false);
-		bool read_only() const;
+		bool is_read_only() const;
 
 		static xr_reader* r_open(const std::string& path);
 		xr_reader* r_open(const std::string& path, const std::string& name) const;
@@ -47,26 +60,15 @@ namespace xray_re
 		bool resolve_path(const std::string& path, const std::string& name, std::string& full_path) const;
 		void update_path(const std::string& path, const std::string& root, const std::string& add);
 		static void append_path_separator(std::string& path);
-		static split_path_t split_path(const std::string& path);
+		static SplitPath split_path(const std::string& path);
 		static std::string current_path();
 
 	protected:
-		struct path_alias
-		{
-			std::string path;
-			std::string root;
-			std::string filter;
-			std::string caption;
-		};
-
-		const path_alias* find_path_alias(const std::string& path) const;
-		path_alias* add_path_alias(const std::string& path, const std::string& root, const std::string& add);
-		bool parse_fs_spec(xr_reader& reader);
-
-		void working_folder(std::string& folder);
+		const PathAlias* find_path_alias(const std::string& path) const;
+		PathAlias* add_path_alias(const std::string& path, const std::string& root, const std::string& add);
 
 	private:
-		std::vector<path_alias*> m_aliases;
-		bool is_read_only;
+		std::vector<PathAlias*> m_aliases;
+		bool m_is_read_only;
 	};
 }

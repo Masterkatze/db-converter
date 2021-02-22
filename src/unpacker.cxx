@@ -159,7 +159,7 @@ void Unpacker::extract_1114(const std::string& prefix, const std::string& mask, 
 			spdlog::debug("  size (compressed): {}", size);
 		}
 
-		if(fs.read_only())
+		if(fs.is_read_only())
 		{
 			continue;
 		}
@@ -211,7 +211,7 @@ void Unpacker::extract_2215(const std::string& prefix, const std::string& mask, 
 		spdlog::debug("  size (real): {}", size_real);
 		spdlog::debug("  size (compressed): {}", size_compressed);
 
-		if(fs.read_only())
+		if(fs.is_read_only())
 		{
 			continue;
 		}
@@ -252,7 +252,7 @@ void Unpacker::extract_2945(const std::string& prefix, const std::string& mask, 
 		spdlog::debug("  size (real): {}", size_real);
 		spdlog::debug("  size (compressed): {}", size_compressed);
 
-		if(fs.read_only())
+		if(fs.is_read_only())
 		{
 			continue;
 		}
@@ -303,7 +303,7 @@ void Unpacker::extract_2947(const std::string& prefix, const std::string& mask, 
 
 		spdlog::debug("  crc: {0:#x}", crc);
 
-		if(fs.read_only())
+		if(fs.is_read_only())
 		{
 			continue;
 		}
@@ -369,7 +369,7 @@ bool Unpacker::write_file(xr_file_system& fs, const std::string& path, const uin
 			}
 		}
 
-		if((!fs.read_only() && !write_file(fs, path, data, size_real)) || (fs.read_only() && !fs.file_exist(path)))
+		if((!fs.is_read_only() && !write_file(fs, path, data, size_real)) || (fs.is_read_only() && !fs.file_exist(path)))
 		{
 			spdlog::error("Failed to open file \"{}\": {} (errno={}) ", path, strerror(errno), errno);
 			return false;

@@ -37,9 +37,17 @@ add_library(db_tools SHARED
 	"xray_re/xr_packet.cxx"
     "xray_re/xr_packet.hxx")
 
-target_link_libraries(db_tools PUBLIC ${Boost_LIBRARIES} spdlog::spdlog)
+target_link_libraries(db_tools
+	PUBLIC
+	${Boost_LIBRARIES}
+	spdlog::spdlog
+)
 
 add_executable(${PROJECT_NAME}
-	"main.cxx")
+	"main.cxx"
+)
 
-target_link_libraries(${PROJECT_NAME} PUBLIC db_tools)
+target_link_libraries(${PROJECT_NAME}
+	PUBLIC
+	db_tools
+)
