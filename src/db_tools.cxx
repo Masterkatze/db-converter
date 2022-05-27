@@ -8,46 +8,17 @@ using namespace xray_re;
 
 bool m_debug = false;
 
-void DBTools::unpack(const std::string& source_path, const std::string& destination_path, const xray_re::DBVersion& version, const std::string& filter)
+void DBTools::unpack(const std::string& source_path, const std::string& destination_path, const xray_re::DBVersion& version, const std::string& filter, bool is_read_only)
 {
 	Unpacker unpacker;
-	unpacker.process(source_path, destination_path, version, filter);
+	unpacker.process(source_path, destination_path, version, filter, is_read_only);
 }
 
 
-void DBTools::pack(const std::string& source_path, const std::string& destination_path, const xray_re::DBVersion& version, const std::string& xdb_ud)
+void DBTools::pack(const std::string& source_path, const std::string& destination_path, const xray_re::DBVersion& version, const std::string& xdb_ud, bool is_read_only)
 {
 	Packer packer;
-	packer.process(source_path, destination_path, version, xdb_ud);
-}
-
-
-bool DBTools::is_xrp(const std::string& extension)
-{
-	return extension == ".xrp";
-}
-
-bool DBTools::is_xp(const std::string& extension)
-{
-	return (extension.size() == 3 && extension == ".xp") ||
-	       (extension.size() == 4 && extension.compare(0, 3, ".xp") == 0 && std::isalnum(extension[3]));
-}
-
-bool DBTools::is_xdb(const std::string& extension)
-{
-	return (extension.size() == 3 && extension == ".xdb") ||
-	       (extension.size() == 4 && extension.compare(0, 3, ".xdb") == 0 && std::isalnum(extension[4]));
-}
-
-bool DBTools::is_db(const std::string& extension)
-{
-	return (extension.size() == 3 && extension == ".db") ||
-	       (extension.size() == 4 && extension.compare(0, 3, ".db") == 0 && std::isalnum(extension[3]));
-}
-
-bool DBTools::is_known(const std::string& extension)
-{
-	return is_db(extension) || is_xdb(extension) || is_xrp(extension) || is_xp(extension);
+	packer.process(source_path, destination_path, version, xdb_ud, is_read_only);
 }
 
 void DBTools::set_debug(const bool value)

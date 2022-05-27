@@ -9,7 +9,7 @@ macro(easy_gtest CPPFILE)
 endmacro()
 
 macro(add_gtest TESTNAME)
-    target_link_libraries(${TESTNAME} PUBLIC gtest gtest_main ${ARGN})
+    target_link_libraries(${TESTNAME} PUBLIC GTest::gtest GTest::gtest_main ${ARGN})
     target_include_directories(${TESTNAME} PRIVATE ${PROJECT_SOURCE_DIR}/src)
 
     if(GOOGLE_TEST_INDIVIDUAL)

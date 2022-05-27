@@ -20,7 +20,7 @@ Packer::~Packer()
 	delete_elements(m_files);
 }
 
-void Packer::process(const std::string& source_path, const std::string& destination_path, const DBVersion& version, const std::string& xdb_ud)
+void Packer::process(const std::string& source_path, const std::string& destination_path, const DBVersion& version, const std::string& xdb_ud, bool is_read_only)
 {
 	if(source_path.empty())
 	{
@@ -41,6 +41,8 @@ void Packer::process(const std::string& source_path, const std::string& destinat
 	}
 
 	xr_file_system& fs = xr_file_system::instance();
+	fs.set_read_only(is_read_only);
+
 	auto path_splitted = fs.split_path(destination_path);
 
 	if(!xr_file_system::folder_exist(path_splitted.folder))

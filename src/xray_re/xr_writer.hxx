@@ -50,18 +50,6 @@ namespace xray_re
 
 		void w_packet(const xr_packet& packet);
 
-		template<typename T> struct f_w: public std::binary_function<T, xr_writer, void> {};
-
-		struct f_w_sz: public f_w<std::string>
-		{
-			void operator()(const std::string& s, xr_writer& w) { w.w_sz(s); }
-		};
-
-		template<typename T> struct f_w_const: public std::const_mem_fun1_t<void, T, xr_writer&>
-		{
-			explicit f_w_const(void (T::*_pmf)(xr_writer& w) const) : std::const_mem_fun1_t<void, T, xr_writer&>(_pmf) {}
-		};
-
 	private:
 		std::stack<size_t> m_open_chunks;
 	};

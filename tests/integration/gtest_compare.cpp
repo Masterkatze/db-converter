@@ -67,12 +67,12 @@ void CompareChecksums(const std::string& file_path, xray_re::DBVersion version, 
 		EXPECT_EQ(checksum.value(), crc32);
 	}
 	{
-		DBTools::unpack(file_path, unpack_path, version, filter);
+		DBTools::unpack(file_path, unpack_path, version, filter, false);
 
 		EXPECT_EQ(GetNumberOfFilesAndDirectories(unpack_path), number_of_files);
 	}
 	{
-		DBTools::pack(unpack_path, packed_file_path, version, userdata_file_path);
+		DBTools::pack(unpack_path, packed_file_path, version, userdata_file_path, false);
 
 		auto checksum = GetChecksum(packed_file_path);
 		ASSERT_TRUE(checksum.has_value());

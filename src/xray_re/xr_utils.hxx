@@ -16,4 +16,10 @@ namespace xray_re
 			delete *it;
 		}
 	}
+
+	bool is_db(const std::string& extension);
+	bool is_xdb(const std::string& extension);
+	bool is_xrp(const std::string& extension);
+	bool is_xp(const std::string& extension);
+	bool is_known(const std::string& extension);
 }

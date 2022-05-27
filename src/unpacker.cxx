@@ -10,7 +10,7 @@ using namespace xray_re;
 
 extern bool m_debug;
 
-void Unpacker::process(const std::string& source_path, const std::string& destination_path, const DBVersion& version, const std::string& filter)
+void Unpacker::process(const std::string& source_path, const std::string& destination_path, const DBVersion& version, const std::string& filter, bool is_read_only)
 {
 	if(version == DBVersion::DB_VERSION_AUTO)
 	{
@@ -35,6 +35,8 @@ void Unpacker::process(const std::string& source_path, const std::string& destin
 	auto extension = path_splitted.extension;
 
 	xr_file_system& fs = xr_file_system::instance();
+	fs.set_read_only(is_read_only);
+
 	auto reader_full = fs.r_open(source_path);
 	if(!reader_full)
 	{

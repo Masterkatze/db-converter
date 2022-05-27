@@ -24,10 +24,9 @@ namespace xray_re
 		std::string filter;
 		std::string caption;
 
-		inline std::string ToString()
-		{
-			return "{path=" + path + ", root=" + root + ", filter=" + filter + ", caption=" + caption + "}";
-		}
+		PathAlias(const std::string& path, const std::string& root, const std::string& filter, const std::string& caption);
+
+		std::string ToString() const;
 	};
 
 	class xr_file_system
@@ -39,6 +38,7 @@ namespace xray_re
 		static xr_file_system& instance();
 
 		bool is_read_only() const;
+		void set_read_only(bool is_read_only);
 
 		static xr_reader* r_open(const std::string& path);
 		xr_reader* r_open(const std::string& path, const std::string& name) const;
@@ -56,19 +56,15 @@ namespace xray_re
 		static bool folder_exist(const std::string& path);
 		bool create_path(const std::string& path) const;
 		bool create_folder(const std::string& path) const;
-		const char* resolve_path(const std::string &path) const;
 		bool resolve_path(const std::string& path, const std::string& name, std::string& full_path) const;
-		void update_path(const std::string& path, const std::string& root, const std::string& add);
 		static void append_path_separator(std::string& path);
 		static SplitPath split_path(const std::string& path);
 		static std::string current_path();
 
-	protected:
-		const PathAlias* find_path_alias(const std::string& path) const;
-		PathAlias* add_path_alias(const std::string& path, const std::string& root, const std::string& add);
-
 	private:
-		std::vector<PathAlias*> m_aliases;
+		PathAlias& add_path_alias(const std::string& path, const std::string& root, const std::string& add);
+
+		std::vector<PathAlias> m_aliases;
 		bool m_is_read_only;
 	};
 }

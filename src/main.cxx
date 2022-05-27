@@ -1,5 +1,6 @@
 #include "db_tools.hxx"
 #include "xray_re/xr_file_system.hxx"
+#include "xray_re/xr_utils.hxx"
 
 #include <boost/program_options.hpp>
 #include <spdlog/spdlog.h>
@@ -140,17 +141,17 @@ int main(int argc, char *argv[])
 
 		auto extension_to_db_version = [](const std::string& extension)
 		{
-			if(DBTools::is_xdb(extension) || DBTools::is_db(extension))
+			if(is_xdb(extension) || is_db(extension))
 			{
 				spdlog::info("Auto-detected version: xdb");
 				return DBVersion::DB_VERSION_XDB;
 			}
-			else if(DBTools::is_xrp(extension))
+			else if(is_xrp(extension))
 			{
 				spdlog::info("Auto-detected version: 1114");
 				return DBVersion::DB_VERSION_1114;
 			}
-			else if(DBTools::is_xp(extension))
+			else if(is_xp(extension))
 			{
 				spdlog::info("Auto-detected version: 2215");
 				return DBVersion::DB_VERSION_2215;
@@ -167,7 +168,7 @@ int main(int argc, char *argv[])
 
 			if(version == DBVersion::DB_VERSION_AUTO)
 			{
-				if(!DBTools::is_known(extension))
+				if(!is_known(extension))
 				{
 					spdlog::error("Unknown input file extension");
 					return 1;
@@ -184,7 +185,7 @@ int main(int argc, char *argv[])
 				filter = vm["flt"].as<std::string>();
 			}
 
-			DBTools::unpack(source_path, destination_path, version, filter);
+			DBTools::unpack(source_path, destination_path, version, filter, is_read_only);
 		}
 		else if(tools_type == ToolsType::PACK)
 		{
@@ -195,7 +196,7 @@ int main(int argc, char *argv[])
 
 			if(version == DBVersion::DB_VERSION_AUTO)
 			{
-				if(!DBTools::is_known(extension))
+				if(!is_known(extension))
 				{
 					spdlog::error("Unknown output file extension");
 					return 1;
@@ -216,7 +217,7 @@ int main(int argc, char *argv[])
 				xdb_ud = vm["xdb_ud"].as<std::string>();
 			}
 
-			DBTools::pack(source_path, destination_path, version, xdb_ud);
+			DBTools::pack(source_path, destination_path, version, xdb_ud, is_read_only);
 		}
 		else
 		{

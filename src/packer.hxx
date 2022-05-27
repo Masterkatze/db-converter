@@ -16,7 +16,7 @@ class Packer
 public:
 	~Packer();
 
-	void process(const std::string& source_path, const std::string& destination_path, const xray_re::DBVersion& version, const std::string& xdb_ud);
+	void process(const std::string& source_path, const std::string& destination_path, const xray_re::DBVersion& version, const std::string& xdb_ud, bool is_read_only);
 
 private:
 	void process_folder(const std::string& path = "");

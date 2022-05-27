@@ -31,11 +31,12 @@ add_library(db_tools SHARED
 	"xray_re/xr_reader.cxx"
 	"xray_re/xr_reader.hxx"
 	"xray_re/xr_reader_scrambler.cxx"
+	"xray_re/xr_utils.cxx"
 	"xray_re/xr_utils.hxx"
 	"xray_re/xr_writer.cxx"
 	"xray_re/xr_writer.hxx"
 	"xray_re/xr_packet.cxx"
-    "xray_re/xr_packet.hxx")
+	"xray_re/xr_packet.hxx")
 
 target_link_libraries(db_tools
 	PUBLIC

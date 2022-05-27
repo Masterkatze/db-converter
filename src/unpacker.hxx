@@ -16,7 +16,7 @@ class Unpacker
 public:
 	~Unpacker() = default;
 
-	void process(const std::string& source_path, const std::string& destination_path, const xray_re::DBVersion& version, const std::string& filter);
+	void process(const std::string& source_path, const std::string& destination_path, const xray_re::DBVersion& version, const std::string& filter, bool is_read_only);
 
 private:
 	static void extract_1114(const std::string& prefix, const std::string& mask, xray_re::xr_reader *reader, const uint8_t *data);

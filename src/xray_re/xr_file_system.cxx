@@ -16,6 +16,19 @@
 
 using namespace xray_re;
 
+auto FindPathAlias(const std::vector<PathAlias>& aliases, const std::string& path)
+{
+	return std::find_if(aliases.begin(), aliases.end(), [&path](const PathAlias& alias) { return alias.path == path; });
+}
+
+PathAlias::PathAlias(const std::string& path, const std::string& root, const std::string& filter, const std::string& caption) :
+	path(path), root(root), filter(filter), caption(caption) {}
+
+std::string PathAlias::ToString() const
+{
+	return "{path=" + path + ", root=" + root + ", filter=" + filter + ", caption=" + caption + "}";
+}
+
 xr_file_system::xr_file_system() : m_is_read_only(false)
 {
 	add_path_alias(PA_FS_ROOT, "", "");
@@ -23,7 +36,7 @@ xr_file_system::xr_file_system() : m_is_read_only(false)
 
 xr_file_system::~xr_file_system()
 {
-	delete_elements(m_aliases);
+
 }
 
 xr_file_system& xr_file_system::instance()
@@ -37,8 +50,14 @@ bool xr_file_system::is_read_only() const
 	return m_is_read_only;
 }
 
+void xr_file_system::set_read_only(bool is_read_only)
+{
+	m_is_read_only = is_read_only;
+}
+
 xr_reader* xr_file_system::r_open(const std::string& path)
 {
+	spdlog::debug("r_open: path={}", path);
 	try
 	{
 		return new xr_mmap_reader_posix(path);
@@ -53,17 +72,28 @@ xr_reader* xr_file_system::r_open(const std::string& path)
 
 xr_reader* xr_file_system::r_open(const std::string& path, const std::string& name) const
 {
-	return r_open(find_path_alias(path)->root + name);
+	spdlog::debug("r_open: path={}, name={}", path, name);
+	auto pa = FindPathAlias(m_aliases, path);
+	if(pa != m_aliases.end())
+	{
+		return r_open(pa->root + name);
+	}
+	else
+	{
+		return nullptr;
+	}
 }
 
 void xr_file_system::r_close(xr_reader *&reader)
 {
+	spdlog::debug("r_close");
 	delete reader;
 	reader = nullptr;
 }
 
 xr_writer* xr_file_system::w_open(const std::string& path, bool ignore_ro) const
 {
+	spdlog::debug("w_open: path={}, ignore_ro={}", path, ignore_ro);
 	if(!ignore_ro && is_read_only())
 	{
 		return new xr_fake_writer();
@@ -81,7 +111,16 @@ xr_writer* xr_file_system::w_open(const std::string& path, bool ignore_ro) const
 
 xr_writer* xr_file_system::w_open(const std::string& path, const std::string& name,  bool ignore_ro) const
 {
-	return w_open(find_path_alias(path)->root + name, ignore_ro);
+	spdlog::debug("w_open: path={}, name={}, ignore_ro={}", path, name, ignore_ro);
+	auto pa = FindPathAlias(m_aliases, path);
+	if(pa != m_aliases.end())
+	{
+		return w_open(pa->root + name, ignore_ro);
+	}
+	else
+	{
+		return nullptr;
+	}
 }
 
 void xr_file_system::w_close(xr_writer *&writer)
@@ -90,21 +129,21 @@ void xr_file_system::w_close(xr_writer *&writer)
 	writer = nullptr;
 }
 
-bool xr_file_system::copy_file(const std::string &src_path, const std::string &src_name, const std::string &dst_path, const std::string &tgt_name) const
+bool xr_file_system::copy_file(const std::string &src_path, const std::string &src_name, const std::string &dst_path, const std::string &dst_name) const
 {
-	auto src_pa = find_path_alias(src_path);
-	if(!src_pa )
+	auto src_pa = FindPathAlias(m_aliases, src_path);
+	if(src_pa == m_aliases.end())
 	{
 		return false;
 	}
 
-	auto tgt_pa = find_path_alias(dst_path);
-	if(!tgt_pa)
+	auto dst_pa = FindPathAlias(m_aliases, dst_path);
+	if(dst_pa == m_aliases.end())
 	{
 		return false;
 	}
 
-	return copy_file(src_pa->root + src_name, tgt_pa->root + (tgt_name.empty() ? src_name : tgt_name));
+	return copy_file(src_pa->root + src_name, dst_pa->root + (dst_name.empty() ? src_name : dst_name));
 }
 
 bool xr_file_system::copy_file(const std::string& src_path, const std::string& dst_path) const
@@ -163,15 +202,10 @@ bool xr_file_system::create_folder(const std::string& path) const
 	return std::filesystem::create_directory(path);
 }
 
-const char* xr_file_system::resolve_path(const std::string& path) const
-{
-	return find_path_alias(path)->root.c_str();
-}
-
 bool xr_file_system::resolve_path(const std::string& path, const std::string& name, std::string& full_path) const
 {
-	auto pa = find_path_alias(path);
-	if(pa == nullptr)
+	auto pa = FindPathAlias(m_aliases, path);
+	if(pa == m_aliases.end())
 	{
 		return false;
 	}
@@ -184,36 +218,6 @@ bool xr_file_system::resolve_path(const std::string& path, const std::string& na
 	}
 
 	return true;
-}
-
-void xr_file_system::update_path(const std::string& path, const std::string& root, const std::string& add)
-{
-	PathAlias *new_pa;
-	for(auto it = m_aliases.begin(), end = m_aliases.end(); it != end; ++it)
-	{
-		if((*it)->path == path)
-		{
-			new_pa = *it;
-			goto found_or_created;
-		}
-	}
-	new_pa = new PathAlias;
-	new_pa->path = path;
-	m_aliases.push_back(new_pa);
-
-found_or_created:
-	auto pa = find_path_alias(root);
-	if(pa)
-	{
-		new_pa->root = pa->root;
-	}
-	else
-	{
-		new_pa->root = root;
-		append_path_separator(new_pa->root);
-	}
-	new_pa->root += add;
-	append_path_separator(new_pa->root);
 }
 
 void xr_file_system::append_path_separator(std::string& path)
@@ -236,55 +240,28 @@ std::string xr_file_system::current_path()
 	return std::filesystem::current_path();
 }
 
-const PathAlias* xr_file_system::find_path_alias(const std::string& path) const
-{
-//	return *std::find_if(m_aliases.begin(), m_aliases.end(), [&path](xr_file_system::path_alias* alias) {
-//		return alias->path == path;
-//	});
-
-	for(const auto& alias : m_aliases)
-	{
-		if(alias->path == path)
-		{
-			return alias;
-		}
-	}
-
-	return nullptr;
-}
-
-PathAlias* xr_file_system::add_path_alias(const std::string& path, const std::string& root, const std::string& add)
+PathAlias& xr_file_system::add_path_alias(const std::string& path, const std::string& root, const std::string& add)
 {
 	spdlog::debug("add_path_alias: path={}, root={}, add={}", path, root, add);
-	auto pa = find_path_alias(path);
 
-	assert(!pa);
+	std::string new_root;
 
-	if(pa)
+	auto pa = FindPathAlias(m_aliases, path);
+	if(pa != m_aliases.end())
 	{
-		spdlog::debug("add_path_alias: path \"{}\" not found", path);
-		return nullptr;
-	}
-
-	auto new_pa = new PathAlias;
-	m_aliases.push_back(new_pa);
-	new_pa->path = path;
-
-	pa = find_path_alias(root);
-	if(pa)
-	{
-		new_pa->root = pa->root;
-		spdlog::debug("add_path_alias: path alias found, root=\"{}\"", new_pa->root);
+		new_root = pa->root;
+		spdlog::debug("add_path_alias: path alias found, root=\"{}\"", new_root);
 	}
 	else
 	{
-		new_pa->root = root;
-		append_path_separator(new_pa->root);
-		spdlog::debug("add_path_alias: path alias not found, root=\"{}\"", new_pa->root);
+		new_root = root;
+		append_path_separator(new_root);
+		spdlog::debug("add_path_alias: path alias not found, root=\"{}\"", new_root);
 	}
 
-	new_pa->root += add;
-	append_path_separator(new_pa->root);
-	spdlog::debug("add_path_alias: returning path alias \"{}\"", new_pa->ToString());
-	return new_pa;
+	new_root += add;
+	append_path_separator(new_root);
+
+	spdlog::debug("add_path_alias: adding new alias, path={}, root={}", path, new_root);
+	return m_aliases.emplace_back(path, new_root, "", "");
 }
