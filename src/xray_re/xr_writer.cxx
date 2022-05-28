@@ -34,7 +34,7 @@ void xr_writer::close_chunk()
 	m_open_chunks.pop();
 }
 
-void xr_writer::w_raw_chunk(uint32_t id, const void *data, size_t size)
+void xr_writer::w_raw_chunk(uint32_t id, const void *data, std::size_t size)
 {
 	spdlog::debug("xr_writer::w_raw_chunk chunk_id={} compressed={}", id & ~CHUNK_COMPRESSED, (id & CHUNK_COMPRESSED) != 0);
 
@@ -46,7 +46,7 @@ void xr_writer::w_raw_chunk(uint32_t id, const void *data, size_t size)
 void xr_writer::w_sz(const std::string& value)
 {
 	// do not write extra '\0'
-	// size_t length = value.length() + 1;
+	// std::size_t length = value.length() + 1;
 	// const char *c_str = value.c_str();
 	// if(len > 0 && c_str[len] == '\0')
 	w_raw(value.data(), value.length() + 1);
@@ -75,11 +75,7 @@ void xr_writer::w_packet(const xr_packet& packet)
 	w_raw(packet.buf(), packet.w_tell());
 }
 
-xr_memory_writer::xr_memory_writer() : m_pos(0) {}
-
-xr_memory_writer::~xr_memory_writer() = default;
-
-void xr_memory_writer::w_raw(const void *data, size_t size)
+void xr_memory_writer::w_raw(const void *data, std::size_t size)
 {
 	if(!size)
 	{
@@ -95,13 +91,13 @@ void xr_memory_writer::w_raw(const void *data, size_t size)
 	m_pos += size;
 }
 
-void xr_memory_writer::seek(size_t pos)
+void xr_memory_writer::seek(std::size_t pos)
 {
 	assert(pos <= m_buffer.size());
 	m_pos = pos;
 }
 
-size_t xr_memory_writer::tell()
+std::size_t xr_memory_writer::tell()
 {
 	return m_pos;
 }
@@ -134,11 +130,7 @@ bool xr_memory_writer::save_to(const std::string& path)
 	return true;
 }
 
-xr_fake_writer::xr_fake_writer() : m_pos(0), m_size(0) {}
-
-xr_fake_writer::~xr_fake_writer() = default;
-
-void xr_fake_writer::w_raw(const void *, size_t size)
+void xr_fake_writer::w_raw(const void *, std::size_t size)
 {
 	m_pos += size;
 	if(m_size < m_pos)
@@ -147,13 +139,13 @@ void xr_fake_writer::w_raw(const void *, size_t size)
 	}
 }
 
-void xr_fake_writer::seek(size_t pos)
+void xr_fake_writer::seek(std::size_t pos)
 {
 	assert(pos < m_size);
 	m_pos = m_size;
 }
 
-size_t xr_fake_writer::tell()
+std::size_t xr_fake_writer::tell()
 {
 	return m_pos;
 }

@@ -9,7 +9,7 @@ namespace xray_re
 {
 	class xr_reader;
 	class xr_writer;
-};
+} // namespace xray_re
 
 class Packer
 {

@@ -6,7 +6,7 @@ namespace xray_re
 {
 	enum
 	{
-		CHUNK_COMPRESSED = 0x80000000,
+		CHUNK_COMPRESSED = 0x80000000
 	};
 
 	template<typename T> void delete_elements(T& container)
@@ -22,4 +22,4 @@ namespace xray_re
 	bool is_xrp(const std::string& extension);
 	bool is_xp(const std::string& extension);
 	bool is_known(const std::string& extension);
-}
+} // namespace xray_re

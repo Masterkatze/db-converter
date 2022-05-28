@@ -1,18 +1,18 @@
 #include "xr_file_system.hxx"
-#include "xr_mmap_reader_posix.hxx"
 #include "xr_file_writer_posix.hxx"
+#include "xr_mmap_reader_posix.hxx"
 #include "xr_utils.hxx"
 
 #include <spdlog/spdlog.h>
 
-#include <filesystem>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <unistd.h>
-#include <sys/mman.h>
-#include <fcntl.h>
 #include <cerrno>
 #include <cstring>
+#include <fcntl.h>
+#include <filesystem>
+#include <sys/mman.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <unistd.h>
 
 using namespace xray_re;
 
@@ -24,19 +24,14 @@ auto FindPathAlias(const std::vector<PathAlias>& aliases, const std::string& pat
 PathAlias::PathAlias(const std::string& path, const std::string& root, const std::string& filter, const std::string& caption) :
 	path(path), root(root), filter(filter), caption(caption) {}
 
-std::string PathAlias::ToString() const
+std::string PathAlias::to_string() const
 {
 	return "{path=" + path + ", root=" + root + ", filter=" + filter + ", caption=" + caption + "}";
 }
 
-xr_file_system::xr_file_system() : m_is_read_only(false)
+xr_file_system::xr_file_system()
 {
 	add_path_alias(PA_FS_ROOT, "", "");
-}
-
-xr_file_system::~xr_file_system()
-{
-
 }
 
 xr_file_system& xr_file_system::instance()
@@ -74,14 +69,12 @@ xr_reader* xr_file_system::r_open(const std::string& path, const std::string& na
 {
 	spdlog::debug("r_open: path={}, name={}", path, name);
 	auto pa = FindPathAlias(m_aliases, path);
-	if(pa != m_aliases.end())
-	{
-		return r_open(pa->root + name);
-	}
-	else
+	if(pa == m_aliases.end())
 	{
 		return nullptr;
 	}
+
+	return r_open(pa->root + name);
 }
 
 void xr_file_system::r_close(xr_reader *&reader)
@@ -99,28 +92,19 @@ xr_writer* xr_file_system::w_open(const std::string& path, bool ignore_ro) const
 		return new xr_fake_writer();
 	}
 
-	auto fd = open(path.c_str(), O_RDWR | O_CREAT, 0666);
-
-	if(fd == -1)
-	{
-		return nullptr;
-	}
-
-	return new xr_file_writer_posix(fd);
+	return new xr_file_writer_posix(path);
 }
 
 xr_writer* xr_file_system::w_open(const std::string& path, const std::string& name,  bool ignore_ro) const
 {
 	spdlog::debug("w_open: path={}, name={}, ignore_ro={}", path, name, ignore_ro);
 	auto pa = FindPathAlias(m_aliases, path);
-	if(pa != m_aliases.end())
-	{
-		return w_open(pa->root + name, ignore_ro);
-	}
-	else
+	if(pa == m_aliases.end())
 	{
 		return nullptr;
 	}
+
+	return w_open(pa->root + name, ignore_ro);
 }
 
 void xr_file_system::w_close(xr_writer *&writer)
@@ -156,7 +140,7 @@ bool xr_file_system::copy_file(const std::string& src_path, const std::string& d
 	return std::filesystem::copy_file(src_path, dst_path);
 }
 
-size_t xr_file_system::file_length(const std::string& path)
+std::size_t xr_file_system::file_length(const std::string& path)
 {
 	return std::filesystem::file_size(path);
 }

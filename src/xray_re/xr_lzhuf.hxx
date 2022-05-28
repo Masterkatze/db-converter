@@ -2,7 +2,6 @@
 
 #include "xr_types.hxx"
 
-#include <cstddef>
 #include <array>
 
 namespace xray_re
@@ -104,4 +103,4 @@ namespace xray_re
 	{
 		instance()->m_lzhuf.Decode(_text, _textsize, _code, _codesize);
 	}
-}
+} // namespace xray_re

@@ -5,8 +5,6 @@
 #include "xr_writer.hxx"
 
 #include <string>
-#include <vector>
-#include <ostream>
 
 namespace xray_re
 {
@@ -26,14 +24,13 @@ namespace xray_re
 
 		PathAlias(const std::string& path, const std::string& root, const std::string& filter, const std::string& caption);
 
-		std::string ToString() const;
+		std::string to_string() const;
 	};
 
 	class xr_file_system
 	{
 	public:
 		xr_file_system();
-		~xr_file_system();
 
 		static xr_file_system& instance();
 
@@ -50,7 +47,7 @@ namespace xray_re
 		bool copy_file(const std::string& src_path, const std::string& src_name, const std::string& dst_path, const std::string& tgt_name = nullptr) const;
 		bool copy_file(const std::string& src_path, const std::string& dst_path) const;
 
-		static size_t file_length(const std::string& path);
+		static std::size_t file_length(const std::string& path);
 		static uint32_t file_age(const std::string& path);
 		static bool file_exist(const std::string& path);
 		static bool folder_exist(const std::string& path);
@@ -65,6 +62,6 @@ namespace xray_re
 		PathAlias& add_path_alias(const std::string& path, const std::string& root, const std::string& add);
 
 		std::vector<PathAlias> m_aliases;
-		bool m_is_read_only;
+		bool m_is_read_only{false};
 	};
-}
+} // namespace xray_re

@@ -10,11 +10,11 @@ namespace xray_re
 	public:
 		xr_mmap_reader_posix();
 		xr_mmap_reader_posix(const std::string& path);
-		virtual ~xr_mmap_reader_posix();
+		~xr_mmap_reader_posix() override;
 
 	private:
-		int m_fd;
-		size_t m_file_length;
-		size_t m_mem_length;
+		int m_fd{-1};
+		std::size_t m_file_length{0};
+		std::size_t m_mem_length{0};
 	};
-}
+} // namespace xray_re

@@ -39,6 +39,7 @@ bool IsConflictingOptionsExist(const variables_map& vm, const std::vector<std::s
 
 int main(int argc, char *argv[])
 {
+	// TODO: reduce the scope of try-catch block
 	try
 	{
 		unsigned int line_lenght = 82;
@@ -203,12 +204,6 @@ int main(int argc, char *argv[])
 				}
 
 				version = extension_to_db_version(extension);
-			}
-
-			std::string filter;
-			if(vm.count("flt"))
-			{
-				filter = vm["flt"].as<std::string>();
 			}
 
 			std::string xdb_ud;

@@ -16,13 +16,13 @@ const uint32_t CHUNK_ID_MASK = ~CHUNK_COMPRESSED;
 
 xr_reader::xr_reader() : m_data(nullptr), m_p(nullptr), m_end(nullptr), m_next(nullptr) { }
 
-xr_reader::xr_reader(const void *data, size_t length)
+xr_reader::xr_reader(const void *data, std::size_t length)
 {
 	m_next = m_p = m_data = static_cast<const uint8_t*>(data);
 	m_end = static_cast<const uint8_t*>(data) + length;
 }
 
-size_t xr_reader::find_chunk(uint32_t id, bool& compressed, bool reset)
+std::size_t xr_reader::find_chunk(uint32_t id, bool& compressed, bool reset)
 {
 	if(reset)
 	{
@@ -49,7 +49,7 @@ size_t xr_reader::find_chunk(uint32_t id, bool& compressed, bool reset)
 	return 0;
 }
 
-size_t xr_reader::find_chunk(uint32_t id)
+std::size_t xr_reader::find_chunk(uint32_t id)
 {
 	bool compressed;
 	return find_chunk(id, compressed);
@@ -134,7 +134,7 @@ xr_reader* xr_reader::open_chunk_next(uint32_t& id, xr_reader *prev)
 	return nullptr;
 }
 
-size_t xr_reader::r_raw_chunk(uint32_t id, void *dest, size_t dest_size)
+std::size_t xr_reader::r_raw_chunk(uint32_t id, void *dest, std::size_t dest_size)
 {
 	bool compressed;
 	auto size = find_chunk(id, compressed);
@@ -149,7 +149,7 @@ size_t xr_reader::r_raw_chunk(uint32_t id, void *dest, size_t dest_size)
 	return size;
 }
 
-void xr_reader::r_raw(void *dest, size_t dest_size)
+void xr_reader::r_raw(void *dest, std::size_t dest_size)
 {
 	assert(m_p + dest_size <= m_end);
 	std::memmove(dest, m_p, dest_size);
@@ -211,7 +211,7 @@ void xr_reader::r_sz(std::string& value)
 	m_p = p;
 }
 
-void xr_reader::r_sz(char *dest, size_t dest_size)
+void xr_reader::r_sz(char *dest, std::size_t dest_size)
 {
 	auto p = m_p;
 	assert(p < m_end && dest_size > 0);
@@ -228,20 +228,22 @@ void xr_reader::r_sz(char *dest, size_t dest_size)
 		assert(p < end);
 		if(p >= end)
 		{
-			std::memmove(dest, m_p, static_cast<size_t>(p - m_p));
+			std::memmove(dest, m_p, static_cast<std::size_t>(p - m_p));
 			dest[dest_size - 1] = 0;
 			m_p = p;
 			return;
 		}
 	}
-	std::memmove(dest, m_p, static_cast<size_t>(p - m_p));
+	std::memmove(dest, m_p, static_cast<std::size_t>(p - m_p));
 	m_p = p;
 }
 
-void xr_reader::r_packet(xr_packet& packet, size_t size)
+void xr_reader::r_packet(xr_packet& packet, std::size_t size)
 {
 	packet.init(skip<uint8_t>(size), size);
 }
+
+xr_temp_reader::xr_temp_reader(const uint8_t *data, std::size_t size) : xr_reader(data, size) {}
 
 xr_temp_reader::~xr_temp_reader()
 {

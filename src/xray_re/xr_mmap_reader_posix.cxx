@@ -3,48 +3,42 @@
 
 #include <spdlog/spdlog.h>
 
-#include <filesystem>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <unistd.h>
-#include <sys/mman.h>
-#include <fcntl.h>
 #include <cerrno>
 #include <cstring>
+#include <fcntl.h>
+#include <filesystem>
+#include <sys/mman.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <unistd.h>
 
 using namespace xray_re;
 
-xr_mmap_reader_posix::xr_mmap_reader_posix() : xr_reader(nullptr, 0), m_fd(-1), m_file_length(0), m_mem_length(0) {}
+xr_mmap_reader_posix::xr_mmap_reader_posix() : xr_reader(nullptr, 0) {}
 
-xr_mmap_reader_posix::xr_mmap_reader_posix(const std::string& path) : xr_reader()
+xr_mmap_reader_posix::xr_mmap_reader_posix(const std::string& path)
 {
 	auto fd = ::open(path.c_str(), O_RDONLY);
 	if(fd == -1)
 	{
-		spdlog::error("Failed to open file \"{}\": {} (errno={}) ", path, strerror(errno), errno);
-		throw;
+		throw std::runtime_error(fmt::format("Failed to open file \"{}\": {} (errno={}) ", path, strerror(errno), errno));
 	}
 
 	struct stat sb {};
 	if(fstat(fd, &sb) == -1)
 	{
-		spdlog::error("stat failed for file \"{}\": {} (errno={}) ", path, strerror(errno), errno);
-		throw;
+		throw std::runtime_error(fmt::format("stat failed for file \"{}\": {} (errno={}) ", path, strerror(errno), errno));
 	}
 
 	auto file_size = static_cast<std::size_t>(sb.st_size);
 
-	std::size_t mem_size;
 	auto page_size = static_cast<std::size_t>(sysconf(_SC_PAGESIZE));
 	std::size_t remainder = file_size % page_size;
 
-	if(remainder == 0)
+	auto mem_size = file_size;
+	if(remainder != 0)
 	{
-		mem_size = file_size;
-	}
-	else
-	{
-		mem_size = file_size + page_size - remainder;
+		mem_size += page_size - remainder;
 	}
 
 	auto data = mmap(nullptr, mem_size, PROT_READ, MAP_PRIVATE, fd, 0);
@@ -53,8 +47,7 @@ xr_mmap_reader_posix::xr_mmap_reader_posix(const std::string& path) : xr_reader(
 	{
 		if(data == MAP_FAILED)
 		{
-			spdlog::error("mmap failed for file \"{}\": {} (errno={}) ", path, strerror(errno), errno);
-			throw;
+			throw std::runtime_error(fmt::format("mmap failed for file \"{}\": {} (errno={}) ", path, strerror(errno), errno));
 		}
 	}
 

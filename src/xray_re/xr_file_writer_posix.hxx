@@ -10,14 +10,13 @@ namespace xray_re
 	class xr_file_writer_posix: public xr_writer
 	{
 	public:
-		xr_file_writer_posix();
-		explicit xr_file_writer_posix(int fd);
-		virtual ~xr_file_writer_posix() override;
-		virtual void w_raw(const void *data, size_t length) override;
-		virtual void seek(size_t pos) override;
-		virtual size_t tell() override;
+		explicit xr_file_writer_posix(const std::string& path);
+		~xr_file_writer_posix() override;
+		void w_raw(const void *data, std::size_t length) override;
+		void seek(std::size_t pos) override;
+		std::size_t tell() override;
 
 	private:
-		int m_fd;
+		int m_fd{-1};
 	};
-}
+} // namespace xray_re

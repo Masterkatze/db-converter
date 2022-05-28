@@ -1,5 +1,5 @@
 #pragma once
 
-#include "stddef.h"
+#include <cstddef>
 
-unsigned int crc32(const void *buf, size_t size);
+unsigned int crc32(const void *buf, std::size_t size);

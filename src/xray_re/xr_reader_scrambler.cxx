@@ -23,12 +23,11 @@ xr_reader* xr_reader::open_chunk(uint32_t id, const xr_scrambler& scrambler)
 
 	if(compressed)
 	{
-		auto temp = new uint8_t[size];
+		uint8_t temp[size];
 		scrambler.decrypt(temp, m_p, size);
 		uint8_t *data;
 		uint32_t real_size;
 		xr_lzhuf::decompress(data, real_size, temp, size);
-		delete[] temp;
 		return new xr_temp_reader(data, real_size);
 	}
 	else

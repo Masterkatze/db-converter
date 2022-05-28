@@ -324,7 +324,7 @@ void Unpacker::extract_2947(const std::string& prefix, const std::string& mask, 
 	}
 }
 
-bool Unpacker::write_file(xr_file_system& fs, const std::string& path, const void *data, size_t size)
+bool Unpacker::write_file(xr_file_system& fs, const std::string& path, const void *data, std::size_t size)
 {
 	auto w = fs.w_open(path);
 	if(w)
@@ -353,29 +353,18 @@ bool Unpacker::write_file(xr_file_system& fs, const std::string& path, const uin
 		size_real = uint32_t(size & UINT32_MAX);
 	}
 
-	if(!write_file(fs, path, data, size_real))
+	auto folder = xr_file_system::split_path(path).folder;
+
+	if(!fs.create_path(folder))
 	{
-		auto folder = xr_file_system::split_path(path).folder;
+		spdlog::error("Failed to create folder {}", folder);
+		return false;
+	}
 
-		if(xr_file_system::folder_exist(folder))
-		{
-			spdlog::error("Failed to open file \"{}\": {} (errno={}) ", path, strerror(errno), errno);
-			return false;
-		}
-		else
-		{
-			if(!fs.create_path(folder))
-			{
-				spdlog::error("Failed to create folder {}", folder);
-				return false;
-			}
-		}
-
-		if((!fs.is_read_only() && !write_file(fs, path, data, size_real)) || (fs.is_read_only() && !fs.file_exist(path)))
-		{
-			spdlog::error("Failed to open file \"{}\": {} (errno={}) ", path, strerror(errno), errno);
-			return false;
-		}
+	if((!fs.is_read_only() && !write_file(fs, path, data, size_real)) || (fs.is_read_only() && !fs.file_exist(path)))
+	{
+		spdlog::error("Failed to open file \"{}\": {} (errno={}) ", path, strerror(errno), errno);
+		return false;
 	}
 
 	if(size_real != size_compressed)
